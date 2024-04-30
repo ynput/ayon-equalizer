@@ -15,7 +15,7 @@ import subprocess
 from pathlib import Path
 from platform import system
 
-from ayon_core.lib.applications import LaunchTypes, PreLaunchHook
+from ayon_applications import PreLaunchHook, LaunchTypes
 
 
 class InstallPySide2(PreLaunchHook):
