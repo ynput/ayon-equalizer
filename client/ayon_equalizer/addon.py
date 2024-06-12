@@ -1,5 +1,7 @@
 import os
 from ayon_core.addon import AYONAddon, IHostAddon
+from .version import __version__
+
 
 EQUALIZER_HOST_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -8,6 +10,7 @@ class EqualizerAddon(AYONAddon, IHostAddon):
     name = "equalizer"
     host_name = "equalizer"
     heartbeat = 500
+    version = __version__
 
     def initialize(self, settings):
         self.heartbeat = settings.get("heartbeat_interval", 500)
