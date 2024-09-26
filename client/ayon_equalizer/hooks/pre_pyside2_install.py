@@ -8,20 +8,23 @@ Note:
     host application.
 
 """
+from __future__ import annotations
 
 import contextlib
 import os
 import subprocess
 from pathlib import Path
 from platform import system
+from typing import Union
 
-from ayon_applications import PreLaunchHook, LaunchTypes
+from ayon_applications import LaunchTypes, PreLaunchHook
 
+python_versions = {7, 8, 9, 10, 11, 12, 13}
 
 class InstallPySide2(PreLaunchHook):
     """Install Qt binding to 3dequalizer's python packages."""
 
-    app_groups = {"3dequalizer", "sdv_3dequalizer"}
+    app_groups = {"equalizer", "sdv_3dequalizer"}
     launch_types = {LaunchTypes.local}
 
     def execute(self):
@@ -32,6 +35,24 @@ class InstallPySide2(PreLaunchHook):
                 f"Processing of {self.__class__.__name__} "
                 "crashed."), exc_info=True
             )
+
+    @staticmethod
+    def _find_python_executable(
+            path_str: str) -> tuple[Union[Path, None], Union[int, None]]:  # noqa: UP007
+        """Find python executable in 3de4's directory.
+
+        Args:
+            path_str (str): Path string with "{version}" placeholder.
+
+        Returns:
+            valid_path (Path): Path to python executable.
+
+        """
+        for version in python_versions:
+            python_dir = Path(path_str.format(version=version))
+            if python_dir.exists():
+                return python_dir, version
+        return None, None
 
     def _execute(self):
         platform = system().lower()
@@ -46,44 +67,64 @@ class InstallPySide2(PreLaunchHook):
                     f"Executable {executable.as_posix()} does not lead "
                     f"to {expected_executable} file. "
                     "Can't determine 3dequalizer's python to "
-                    f"check/install PySide2. {executable.name}"
+                    f"check/install PySide2/PySide6. {executable.name}"
                 ))
                 return
-            python_dir = executable.parent.parent / "sys_data" / "py37_inst"
+
+            python_path_str = os.path.join(
+                executable.parent.parent.as_posix(),
+                "sys_data", "py3{version}_inst")
         else:
-            python_dir = Path(self.launch_context.env["TDE4_HOME"]) / "sys_data" / "py37_inst"  # noqa: E501
+            python_path_str = os.path.join(
+                self.launch_context.env["TDE4_HOME"],
+                "sys_data", "py3{version}_inst")
+
+        python_dir, py_version = self._find_python_executable(python_path_str)
+
+        if not python_dir:
+            self.log.warning(
+                "Couldn't find python executable "
+                "for 3de4 in %s" % python_path_str)
+            return
 
         if platform == "windows":
-            python_executable = python_dir / "python.exe"
+            python_executable = Path(python_dir) / "python.exe"
         else:
-            python_executable = python_dir / "python"
+            python_executable = Path(python_dir) / "python"
             # Check for python with enabled 'pymalloc'
             if not python_executable.exists():
-                python_executable = python_dir / "pythonm"
+                python_executable = Path(python_dir) / f"python3.{py_version}m"
 
         if not python_executable.exists():
             self.log.warning(
                 "Couldn't find python executable "
-                f"for 3de4 {python_executable.as_posix()}"
-            )
+                "for 3de4 %s" % python_executable.as_posix())
 
             return
+
+        pyside_name = "PySide6"
+        if py_version < 11:
+            pyside_name = "PySide2"
+
 
         # Check if PySide2 is installed and skip if yes
-        if self.is_pyside_installed(python_executable):
-            self.log.debug("3Dequalizer has already installed PySide2.")
+        if self.is_pyside_installed(python_executable, pyside_name):
+            self.log.debug(
+                "3Dequalizer has already installed %s." % pyside_name)
             return
 
-        # Install PySide2 in 3de4's python
+        # Install PySide2/PySide6 in 3de4's python
         if platform == "windows":
             result = self.install_pyside_windows(python_executable)
         else:
             result = self.install_pyside(python_executable)
 
         if result:
-            self.log.info("Successfully installed PySide2 module to 3de4.")
+            self.log.info(
+                "Successfully installed %s module to 3de4." % pyside_name)
         else:
-            self.log.warning("Failed to install PySide2 module to 3de4.")
+            self.log.warning(
+                "Failed to install %s module to 3de4." % pyside_name)
 
     def install_pyside_windows(self, python_executable: Path):
         """Install PySide2 python module to 3de4's python.
@@ -133,21 +174,20 @@ class InstallPySide2(PreLaunchHook):
             return_code = win32process.GetExitCodeProcess(process_handle)
             return return_code == 0
 
-    def install_pyside(self, python_executable: Path):
+    def install_pyside(self, python_executable: Path, pyside_name: str):
         """Install PySide2 python module to 3de4's python."""
-
         args = [
             python_executable.as_posix(),
             "-m",
             "pip",
             "install",
             "--ignore-installed",
-            "PySide2",
+            pyside_name,
         ]
 
         try:
             # Parameters
-            # - use "-m pip" as module pip to install PySide2 and argument
+            # - use "-m pip" as module pip to install PySide2/6 and argument
             #   "--ignore-installed" is to force install module to 3de4
             #   site-packages and make sure it is binary compatible
 
@@ -158,15 +198,15 @@ class InstallPySide2(PreLaunchHook):
             return process.returncode == 0
         except PermissionError:
             self.log.warning(
-                f'Permission denied with command:\"{" ".join(args)}\".')
+                'Permission denied with command: "%s".' % " ".join(args))
         except OSError as error:
-            self.log.warning(f"OS error has occurred: \"{error}\".")
+            self.log.warning('OS error has occurred: "%s".' % error)
         except subprocess.SubprocessError:
             pass
 
     @staticmethod
-    def is_pyside_installed(python_executable: Path) -> bool:
-        """Check if PySide2 module is in 3de4 python env.
+    def is_pyside_installed(python_executable: Path, pyside_name: str) -> bool:
+        """Check if PySide2/6 module is in 3de4 python env.
 
         Args:
             python_executable (Path): Path to python executable.
@@ -191,6 +231,6 @@ class InstallPySide2(PreLaunchHook):
             if not line:
                 continue
             package_name = line[:package_len].strip()
-            if package_name.lower() == "pyside2":
+            if package_name.lower() == pyside_name.lower():
                 return True
         return False
