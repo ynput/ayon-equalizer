@@ -1,13 +1,14 @@
 """Base plugin class for 3DEqualizer.
 
-note:
+Note:
     3dequalizer 7.1v2 uses Python 3.7.9
+    3dequalizer 8.0 uses Python 3.9
 
 """
-from abc import ABC
+from abc import ABCMeta
 from typing import Dict, List
 
-from ayon_equalizer.api import EqualizerHost
+import six
 from ayon_core.lib import BoolDef, EnumDef, NumberDef
 from ayon_core.pipeline import (
     CreatedInstance,
@@ -15,15 +16,11 @@ from ayon_core.pipeline import (
     OptionalPyblishPluginMixin,
 )
 
+from ayon_equalizer.api import EqualizerHost
 
-class EqualizerCreator(ABC, Creator):
 
-    @property
-    def host(self) -> EqualizerHost:
-        """Return the host application."""
-        # We need to cast the host to EqualizerHost, because the Creator
-        # class is not aware of the host application.
-        return super().host
+@six.add_metaclass(ABCMeta)
+class EqualizerCreator(Creator):
 
     def create(self, subset_name, instance_data, pre_create_data):
         """Create a subset in the host application.
@@ -34,11 +31,12 @@ class EqualizerCreator(ABC, Creator):
             pre_create_data (dict): Data from the pre-create step.
 
         Returns:
-            openpype.pipeline.CreatedInstance: Created instance.
+            ayon_core.pipeline.CreatedInstance: Created instance.
+
         """
         self.log.debug("EqualizerCreator.create")
         instance = CreatedInstance(
-            self.family,
+            self.product_type,
             subset_name,
             instance_data,
             self)
@@ -50,6 +48,7 @@ class EqualizerCreator(ABC, Creator):
 
         Returns:
             list[openpype.pipeline.CreatedInstance]: List of instances.
+
         """
         for instance_data in self.host.get_context_data().get(
                 "publish_instances", []):
@@ -155,5 +154,11 @@ class ExtractScriptBase(OptionalPyblishPluginMixin):
                     ["mm", "cm", "m", "in", "ft", "yd"],
                     default=cls.units,
                     label="Units"),
+            BoolDef("point_sets",
+                    label="Export Point Sets",
+                    default=True),
+            BoolDef("export_2p5d",
+                    label="Export 2.5D Points",
+                    default=True),
         ])
         return defs
