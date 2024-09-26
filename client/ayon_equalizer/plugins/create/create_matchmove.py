@@ -7,7 +7,7 @@ from ayon_core.lib import EnumDef
 class CreateMatchMove(EqualizerCreator):
     identifier = "io.ayon.creators.equalizer.matchmove"
     label = "Match Move"
-    family = "matchmove"
+    product_type = "matchmove"
     icon = "camera"
 
     def get_instance_attr_defs(self):
