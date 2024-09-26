@@ -36,6 +36,7 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
     label = "Extract Nuke Script"
     families = ["matchmove"]
     hosts = ["equalizer"]
+    optional = True
 
     order = pyblish.api.ExtractorOrder
 
@@ -71,7 +72,7 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
             return None
 
         # import maya export script from 3DEqualizer
-        exporter_path = instance.data["tde4_path"] / "sys_data" / "py_scripts" / "export_nuke.py"  # noqa: E501
+        exporter_path = instance.context.data["tde4_path"] / "sys_data" / "py_scripts" / "export_nuke.py"  # noqa: E501
         self.log.debug("Patching 3dequalizer requester objects ...")
 
         with patch("tde4.getWidgetValue", patched_getWidgetValue), \
