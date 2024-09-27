@@ -1,16 +1,19 @@
 import tde4
+from ayon_core.lib import EnumDef
 
 from ayon_equalizer.api import EqualizerCreator
-from ayon_core.lib import EnumDef
 
 
 class CreateMatchMove(EqualizerCreator):
+    """Create Match Move subset."""
+
     identifier = "io.ayon.creators.equalizer.matchmove"
     label = "Match Move"
     product_type = "matchmove"
     icon = "camera"
 
     def get_instance_attr_defs(self):
+        """Return instance attribute definitions."""
         camera_enum = [
             {"value": "__all__", "label": "All Cameras"},
             {"value": "__current__", "label": "Current Camera"},
@@ -34,7 +37,7 @@ class CreateMatchMove(EqualizerCreator):
             model_enum.extend(
                 {
                     "label": tde4.get3DModelName(point_group, model),
-                    "value": model
+                    "value": model,
                 } for model in model_list
             )
         return [
@@ -50,6 +53,9 @@ class CreateMatchMove(EqualizerCreator):
                     tooltip="Select models to publish"),
         ]
 
-    def create(self, subset_name, instance_data, pre_create_data):
+    def create(
+            self, product_name: str,
+            instance_data: dict, pre_create_data: dict):
+        """Create Match Move subset."""
         self.log.debug("CreateMatchMove.create")
-        super().create(subset_name, instance_data, pre_create_data)
+        super().create(product_name, instance_data, pre_create_data)
