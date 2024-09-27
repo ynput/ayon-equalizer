@@ -109,13 +109,17 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                     for model in model_list:
                         tde4.set3DModelSelectionFlag(point_group, model, 0)
 
-            file_path = Path(staging_dir) / "maya_export.mel"
+            file_path = Path(staging_dir) / "maya_export"
             if instance.context.data.get("tde4_version"):
                 self.log.debug(f"Exporting to: {file_path.as_posix()}")
 
+            # create representation data
+            if "representations" not in instance.data:
+                instance.data["representations"] = []
+
             if instance.context.data["tde4_version"].major == 7:
                 status = exporter._maya_export_mel_file(
-                    file_path.as_posix(),  # staging path
+                    file_path.as_posix() + ".mel",  # staging path
                     point_group,  # camera point group
                     [c["id"] for c in instance.data["cameras"] if c["enabled"]],
                     model_selection,  # model selection mode
@@ -125,6 +129,13 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                     scale_factor,
                     offset,  # start frame
                     1 if attr_data["hide_reference_frame"] else 0)
+
+                representation = {
+                    'name': "matchmoveScript",
+                    'ext': "mel",
+                    'files': file_path.name,
+                    "stagingDir": staging_dir,
+                }
             elif instance.context.data["tde4_version"].major == 8:
                 exporter.script_version = "4.7"
                 status, npoly_warning = exporter._maya_export_python_file(
@@ -141,20 +152,17 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                     maya_valid_name(f"{instance.data['name']}_GRP"),  # scene_name,
                     1 if attr_data["point_sets"] else 0,
                     1 if attr_data["export_2p5d"] else 0)
-                self.log.debug(f"npoly_warning: {npoly_warning}")
+                if npoly_warning:
+                    self.log.warning(f"npoly warning: {npoly_warning}")
+                representation = {
+                    'name': "py",
+                    'ext': "py",
+                    'files': file_path.name + ".py",
+                    "stagingDir": staging_dir,
+                }
 
         if status != 1:
             raise KnownPublishError(f"Export failed {status}")
 
-        # create representation data
-        if "representations" not in instance.data:
-            instance.data["representations"] = []
-
-        representation = {
-            'name': "mel",
-            'ext': "mel",
-            'files': file_path.name,
-            "stagingDir": staging_dir,
-        }
         self.log.debug(f"output: {file_path.as_posix()}")
         instance.data["representations"].append(representation)
