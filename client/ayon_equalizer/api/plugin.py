@@ -16,17 +16,19 @@ from ayon_core.pipeline import (
     OptionalPyblishPluginMixin,
 )
 
-from ayon_equalizer.api import EqualizerHost
-
 
 @six.add_metaclass(ABCMeta)
 class EqualizerCreator(Creator):
+    """Base class for creating instances in 3DEqualizer."""
 
-    def create(self, subset_name, instance_data, pre_create_data):
+    def create(self,
+               product_name: str,
+               instance_data: dict,
+               pre_create_data: dict):
         """Create a subset in the host application.
 
         Args:
-            subset_name (str): Name of the subset to create.
+            product_name (str): Name of the subset to create.
             instance_data (dict): Data of the instance to create.
             pre_create_data (dict): Data from the pre-create step.
 
@@ -37,7 +39,7 @@ class EqualizerCreator(Creator):
         self.log.debug("EqualizerCreator.create")
         instance = CreatedInstance(
             self.product_type,
-            subset_name,
+            product_name,
             instance_data,
             self)
         self._add_instance_to_context(instance)
@@ -58,9 +60,7 @@ class EqualizerCreator(Creator):
             self._add_instance_to_context(created_instance)
 
     def update_instances(self, update_list):
-
-        # if not update_list:
-        #     return
+        """Update instances in the host application."""
         context = self.host.get_context_data()
         if not context.get("publish_instances"):
             context["publish_instances"] = []
@@ -88,6 +88,7 @@ class EqualizerCreator(Creator):
         self.host.update_context_data(context, changes=update_list)
 
     def remove_instances(self, instances: List[Dict]):
+        """Remove instances from the host application."""
         context = self.host.get_context_data()
         if not context.get("publish_instances"):
             context["publish_instances"] = []
@@ -114,6 +115,7 @@ class ExtractScriptBase(OptionalPyblishPluginMixin):
 
     @classmethod
     def apply_settings(cls, project_settings, system_settings):
+        """Apply settings from the configuration."""
         settings = project_settings["equalizer"]["publish"][
             "ExtractMatchmoveScriptMaya"]  # noqa
 
@@ -128,8 +130,9 @@ class ExtractScriptBase(OptionalPyblishPluginMixin):
         cls.units = settings.get("units", cls.units)
 
     @classmethod
-    def get_attribute_defs(cls):
-        defs = super(ExtractScriptBase, cls).get_attribute_defs()
+    def get_attribute_defs(cls) -> list:
+        """Get attribute definitions for the plugin."""
+        defs = super().get_attribute_defs()
 
         defs.extend([
             BoolDef("hide_reference_frame",

@@ -1,26 +1,29 @@
 """3dequalizer host implementation.
 
-note:
+Note:
     3dequalizer 7.1v2 uses Python 3.7.9
+    3dequalizer 8.0 uses Python 3.9.x
 
 """
+from __future__ import annotations
+
+import dataclasses
 import json
 import os
 import re
+from typing import Optional
 
 import pyblish.api
-import tde4  # noqa: F401
-from attrs import asdict
-from attrs.exceptions import NotAnAttrsClassError
-from qtpy import QtCore, QtWidgets
-
-from ayon_core.host import HostBase, ILoadHost, IWorkfileHost, IPublishHost
-from ayon_equalizer import EQUALIZER_HOST_DIR
-from ayon_equalizer.api.pipeline import Container
+import tde4
+from ayon_core.host import HostBase, ILoadHost, IPublishHost, IWorkfileHost
 from ayon_core.pipeline import (
     register_creator_plugin_path,
     register_loader_plugin_path,
 )
+from qtpy import QtCore, QtWidgets
+
+from ayon_equalizer import EQUALIZER_HOST_DIR
+from ayon_equalizer.api.pipeline import Container
 
 CONTEXT_REGEX = re.compile(
     r"AYON_CONTEXT::(?P<context>.*?)::AYON_CONTEXT_END",
@@ -32,21 +35,36 @@ CREATE_PATH = os.path.join(PLUGINS_DIR, "create")
 INVENTORY_PATH = os.path.join(PLUGINS_DIR, "inventory")
 
 
+class DataclassJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder for dataclasses."""
+
+    def default(self, o: object):
+        """Encode dataclasses as dict."""
+        if dataclasses.is_dataclass(o):
+            # type: o: dataclasses.dataclass
+            return dataclasses.asdict(o)
+        return super().default(o)
+
+
 class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
+    """3DEqualizer host implementation."""
+
     name = "equalizer"
     _instance = None
 
     def __new__(cls):
+        """Singleton implementation."""
         # singleton - ensure only one instance of the host is created.
         # This is necessary because 3DEqualizer doesn't have a way to
         # store custom data, so we need to store it in the project notes.
         if not hasattr(cls, "_instance") or not cls._instance:
-            cls._instance = super(EqualizerHost, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
+        """Initialize the host."""
         self._qapp = None
-        super(EqualizerHost, self).__init__()
+        super().__init__()
 
     def workfile_has_unsaved_changes(self):
         """Return the state of the current workfile.
@@ -55,13 +73,21 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         Returns:
             bool: True if the current workfile has unsaved changes.
+
         """
         return not bool(tde4.isProjectUpToDate())
 
     def get_workfile_extensions(self):
+        """Return the workfile extensions for 3DEqualizer."""
         return [".3de"]
 
-    def save_workfile(self, dst_path=None):
+    def save_workfile(self, dst_path: Optional[str]=None):
+        """Save the current workfile.
+
+        Arguments:
+            dst_path (str): Destination path to save the workfile.
+
+        """
         if not dst_path:
             dst_path = tde4.getProjectPath()
         result = tde4.saveProject(dst_path, True)
@@ -70,7 +96,8 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         return dst_path
 
-    def open_workfile(self, filepath):
+    def open_workfile(self, filepath: str):
+        """Open a workfile in 3DEqualizer."""
         result = tde4.loadProject(filepath, True)
         if not bool(result):
             raise RuntimeError(f"Failed to open workfile {filepath}.")
@@ -78,30 +105,40 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         return filepath
 
     def get_current_workfile(self):
+        """Return the current workfile path."""
         return tde4.getProjectPath()
 
     def get_containers(self):
+        """Get containers from the current workfile."""
         context = self.get_context_data()
         if context:
             return context.get("containers", [])
         return []
 
+    def ls(self):
+        """List all the containers in the current workfile."""
+        return self.get_containers()
+
     def add_container(self, container: Container):
+        """Add a container to the current workfile.
+
+        Args:
+            container (Container): Container to add.
+
+        """
         context_data = self.get_context_data()
         containers = self.get_containers()
+        to_remove = [
+            idx
+            for idx, _container in enumerate(containers)
+            if _container["name"] == container["name"]
+            and _container["namespace"] == container["namespace"]
+        ]
+        for idx in reversed(to_remove):
+            containers.pop(idx)
 
-        for _container in containers:
-            if _container["name"] == container.name and _container["namespace"] == container.namespace:  # noqa: E501
-                containers.remove(_container)
-                break
+        context_data["containers"] = [*containers, container]
 
-        try:
-            containers.append(asdict(container))
-        except NotAnAttrsClassError:
-            print("not an attrs class")
-            containers.append(container)
-
-        context_data["containers"] = containers
         self.update_context_data(context_data, changes={})
 
     def get_context_data(self) -> dict:
@@ -114,8 +151,8 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         Returns:
             dict: Context data.
-        """
 
+        """
         # sourcery skip: use-named-expression
         m = re.search(CONTEXT_REGEX, tde4.getProjectNotes())
         try:
@@ -126,7 +163,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         return context
 
-    def update_context_data(self, data, changes):
+    def update_context_data(self, data: dict, changes: dict):
         """Update context data in the current workfile.
 
         Serialize context data as json and store it in the
@@ -139,6 +176,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         Raises:
             RuntimeError: If the context data is not found.
+
         """
         notes = tde4.getProjectNotes()
         m = re.search(CONTEXT_REGEX, notes)
@@ -152,13 +190,14 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         updated_data = original_data.copy()
         updated_data.update(data)
-        update_str = json.dumps(updated_data or {}, indent=4)
+        update_str = json.dumps(
+            updated_data or {}, indent=4, cls=DataclassJSONEncoder)
 
         tde4.setProjectNotes(
             re.sub(
                 CONTEXT_REGEX,
                 f"AYON_CONTEXT::{update_str}::AYON_CONTEXT_END",
-                tde4.getProjectNotes()
+                tde4.getProjectNotes(),
             )
         )
         tde4.updateGUI()
