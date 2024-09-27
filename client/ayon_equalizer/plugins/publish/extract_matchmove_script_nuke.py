@@ -20,6 +20,8 @@ import tde4  # noqa: F401
 from ayon_core.pipeline import OptionalPyblishPluginMixin
 from ayon_core.pipeline import publish
 
+# this is required because of the * import in extract_nuke script
+from vl_sdv import rot3d, mat3d, VL_APPLY_ZXY  # noqa: F401
 
 class ExtractMatchmoveScriptNuke(publish.Extractor,
                                  OptionalPyblishPluginMixin):
