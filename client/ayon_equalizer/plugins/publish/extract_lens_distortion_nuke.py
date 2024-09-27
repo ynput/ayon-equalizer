@@ -1,71 +1,77 @@
-"""Collect camera data from the scene."""
+from pathlib import Path
+
 import pyblish.api
-import tde4
+import tde4  # noqa: F401
+from ayon_core.lib import EnumDef, import_filepath
+from ayon_core.pipeline import OptionalPyblishPluginMixin, publish
+from unittest.mock import patch
 
 
-class CollectCameraData(pyblish.api.InstancePlugin):
-    """Collect camera data from the scene."""
+class ExtractLensDistortionNuke(publish.Extractor,
+                                OptionalPyblishPluginMixin):
+    """Extract Nuke script for matchmove.
 
-    order = pyblish.api.CollectorOrder
-    families = ["matchmove"]
+    Unfortunately built-in export script from 3DEqualizer is bound to its UI,
+    and it is not possible to call it directly from Python. Because of that,
+    we are executing the script in the same way as artist would do it, but
+    we are patching the UI to silence it and to avoid any user interaction.
+
+    TODO: Utilize attributes defined in ExtractScriptBase
+    """
+
+    label = "Extract Lens Distortion Nuke node"
+    families = ["lensDistortion"]
     hosts = ["equalizer"]
-    label = "Collect camera data"
+
+    order = pyblish.api.ExtractorOrder
 
     def process(self, instance: pyblish.api.Instance):
-        # handle camera selection.
-        # possible values are:
-        #   - __current__ - current camera
-        #   - __ref__ - reference cameras
-        #   - __seq__ - sequence cameras
-        #   - __all__ - all cameras
-        #   - camera_id - specific camera
 
-        try:
-            camera_sel = instance.data["creator_attributes"]["camera_selection"]  # noqa: E501
-        except KeyError:
-            self.log.warning("No camera defined")
+        if not self.is_active(instance.data):
             return
 
-        if camera_sel == "__all__":
-            cameras = tde4.getCameraList()
-        elif camera_sel == "__current__":
-            cameras = [tde4.getCurrentCamera()]
-        elif camera_sel in ["__ref__", "__seq__"]:
-            cameras = [
-                c for c in tde4.getCameraList()
-                if tde4.getCameraType(c) == "REF_FRAME"
-            ]
-        else:
-            if camera_sel not in tde4.getCameraList():
-                self.log.warning("Invalid camera found")
-                return
-            cameras = [camera_sel]
+        cam = tde4.getCurrentCamera()
+        offset = tde4.getCameraFrameOffset(cam)
+        staging_dir = self.staging_dir(instance)
+        file_path = Path(staging_dir) / "nuke_ld_export.nk"
+        attr_data = self.get_attr_values_from_data(instance.data)
 
-        data = []
+        # these patched methods are used to silence 3DEqualizer UI:
+        def patched_getWidgetValue(requester, key: str):  # noqa: N802
+            """Return value for given key in widget."""
+            if key == "option_menu_fov_mode":
+                return attr_data["fovMode"]
+            return ""
 
-        for camera in cameras:
-            camera_name = tde4.getCameraName(camera)
-            enabled = tde4.getCameraEnabledFlag(camera)
-            # calculation range
-            c_range_start, c_range_end = tde4.getCameraCalculationRange(
-                camera)
-            p_range_start, p_range_end = tde4.getCameraPlaybackRange(camera)
-            fov = tde4.getCameraFOV(camera)
-            fps = tde4.getCameraFPS(camera)
-            # focal length is time based, so lets skip it for now
-            # focal_length = tde4.getCameraFocalLength(camera, frame)
-            path = tde4.getCameraPath(camera)
+        # import export script from 3DEqualizer
+        exporter_path = instance.context.data["tde4_path"] / "sys_data" / "py_scripts" / "export_nuke_LD_3DE4_Lens_Distortion_Node.py"  # noqa: E501
+        self.log.debug(f"Importing {exporter_path.as_posix()}")
+        exporter = import_filepath(exporter_path.as_posix())
+        with patch("tde4.getWidgetValue", patched_getWidgetValue):
+                exporter.exportNukeDewarpNode(cam, offset, file_path.as_posix())
 
-            camera_data = {
-                "name": camera_name,
-                "id": camera,
-                "enabled": enabled,
-                "calculation_range": (c_range_start, c_range_end),
-                "playback_range": (p_range_start, p_range_end),
-                "fov": fov,
-                "fps": fps,
-                # "focal_length": focal_length,
-                "path": path
-            }
-            data.append(camera_data)
-        instance.data["cameras"] = data
+        # create representation data
+        if "representations" not in instance.data:
+            instance.data["representations"] = []
+
+        representation = {
+            "name": "lensDistortion",
+            "ext": "nk",
+            "files": file_path.name,
+            "stagingDir": staging_dir,
+        }
+        self.log.debug(f"output: {file_path.as_posix()}")
+        instance.data["representations"].append(representation)
+
+    @classmethod
+    def get_attribute_defs(cls):
+        return [
+            *super().get_attribute_defs(),
+            EnumDef("fovMode",
+                    label="FOV Mode",
+                    items=[
+                        {"value": "1", "label": "legacy"},
+                        {"value": "2", "label": "new (v8+)"}],
+                    tooltip="FOV mode (legacy or new)",
+                    default="legacy"),
+        ]
