@@ -1,7 +1,6 @@
 import os
 
 from ayon_core.addon import AYONAddon, IHostAddon
-from .version import __version__
 
 from .version import __version__
 
