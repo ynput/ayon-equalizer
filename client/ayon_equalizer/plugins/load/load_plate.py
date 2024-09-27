@@ -15,19 +15,21 @@ TODO (antirotor):
 """
 import os
 import re
+import time
 
-import ayon_core.pipeline.load as load
 import tde4
 from ayon_core.lib.transcoding import IMAGE_EXTENSIONS
 from ayon_core.pipeline import (
-    get_current_project_name,
     get_representation_path,
+    load,
 )
 
 from ayon_equalizer.api import Container, EqualizerHost
 
 
 class LoadPlate(load.LoaderPlugin):
+    """Load image sequence to the current camera."""
+
     product_types = [
         "imagesequence",
         "review",
@@ -37,7 +39,7 @@ class LoadPlate(load.LoaderPlugin):
         "online",
     ]
 
-    representations = {"*"}
+    representations = ["*"]
     extensions = {ext.lstrip(".") for ext in IMAGE_EXTENSIONS}
 
     label = "Load sequence"
@@ -46,11 +48,10 @@ class LoadPlate(load.LoaderPlugin):
     color = "orange"
 
     def load(self, context, name=None, namespace=None, options=None):
+        """Load image sequence to the current camera."""
         repre_entity = context["representation"]
-        project_name = get_current_project_name()
         version_entity = context["version"]
         version_attributes = version_entity["attrib"]
-        version_data = version_entity["data"]
 
         file_path = get_representation_path(repre_entity)
         file_path = self.format_path(file_path, repre_entity)
@@ -59,8 +60,7 @@ class LoadPlate(load.LoaderPlugin):
         tde4.setCameraName(camera, name)
         camera_name = tde4.getCameraName(camera)
 
-        print(
-            f"Loading: {file_path} into {camera_name}")
+        self.log.debug(f"Loading: {file_path} into {camera_name}")
 
         # set the path to sequence on the camera
         tde4.setCameraPath(camera, file_path)
@@ -75,23 +75,26 @@ class LoadPlate(load.LoaderPlugin):
             namespace=camera_name,
             loader=self.__class__.__name__,
             representation=str(repre_entity["id"]),
+            objectName=camera_name,
+            version=str(version_entity["version"]),
+            timestamp=time.time_ns()
         )
-        print(container)
         EqualizerHost.get_host().add_container(container)
+        tde4.updateGUI()
 
     def update(self, container, context):
+        """Update the image sequence on the current camera."""
         version_entity = context["version"]
         version_attributes = version_entity["attrib"]
         repre_entity = context["representation"]
         camera_list = tde4.getCameraList()
         try:
-            camera = [
+            camera = next(
                 c for c in camera_list if
                 tde4.getCameraName(c) == container["namespace"]
-            ][0]
+            )
         except IndexError:
-            self.log.error(f'Cannot find camera {container["namespace"]}')
-            print(f'Cannot find camera {container["namespace"]}')
+            self.log.exception(f'Cannot find camera {container["namespace"]}')
             return
 
         file_path = get_representation_path(repre_entity)
@@ -104,17 +107,24 @@ class LoadPlate(load.LoaderPlugin):
         tde4.setCameraSequenceAttr(
             camera, int(version_attributes.get("frameStart")),
             int(version_attributes.get("frameEnd")), 1)
+        print(f"Updating: {file_path} into {container['namespace']}")
+        self.log.info(f"Updating: {file_path} into {container['namespace']}")
+        container["representation"] = repre_entity["id"]
+        container["version"] = str(version_entity["version"])
 
-        print(container)
         EqualizerHost.get_host().add_container(container)
+        tde4.updateGUI()
 
-    def switch(self, container, context):
+    def switch(self, container: dict, context: dict):
+        """Switch the image sequence on the current camera."""
         self.update(container, context)
 
     @staticmethod
-    def format_path(path, representation):
+    def format_path(path: str, representation: dict) -> str:
+        """Format file path correctly for single image or sequence."""
         if not os.path.exists(path):
-            raise RuntimeError("Path does not exist: %s" % path)
+            msg = f"Path does not exist: {path}"
+            raise RuntimeError(msg)
 
         ext = os.path.splitext(path)[-1]
 
@@ -124,15 +134,12 @@ class LoadPlate(load.LoaderPlugin):
             filename = path
         else:
             hashes = "#" * len(str(representation["context"].get("frame")))
-            filename = re.sub(r"(.*)\.(\d+){}$".format(re.escape(ext)),
-                              "\\1.{}{}".format(hashes, ext),
-                              path)
+            filename = re.sub(
+                f"(.*)\\.(\\d+){re.escape(ext)}$",
+                f"\\1.{hashes}{ext}", path)
 
             filename = os.path.join(path, filename)
 
         filename = os.path.normpath(filename)
-        filename = filename.replace("\\", "/")
+        return filename.replace("\\", "/")
 
-        return filename
-
-        return self.filepath_from_context(context)
