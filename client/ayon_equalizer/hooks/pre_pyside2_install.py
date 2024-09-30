@@ -61,7 +61,7 @@ class InstallPySide2(PreLaunchHook):
         if platform == "windows":
             expected_executable += ".exe"
 
-        if not self.launch_context.env.get("TDE4_HOME"):
+        if not self.launch_context.env.get("TDE4_ROOT"):
             if executable.name.lower() != expected_executable:
                 self.log.warning(
                     f"Executable {executable.as_posix()} does not lead "
@@ -76,7 +76,7 @@ class InstallPySide2(PreLaunchHook):
                 "sys_data", "py3{version}_inst")
         else:
             python_path_str = os.path.join(
-                self.launch_context.env["TDE4_HOME"],
+                self.launch_context.env["TDE4_ROOT"],
                 "sys_data", "py3{version}_inst")
 
         python_dir, py_version = self._find_python_executable(python_path_str)
