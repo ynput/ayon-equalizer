@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """Extract project for Nuke.
 
 Because original extractor script is intermingled with UI, we had to resort
@@ -15,13 +15,11 @@ from unittest.mock import patch
 
 import pyblish.api
 import tde4  # noqa: F401
-
-
-from ayon_core.pipeline import OptionalPyblishPluginMixin
-from ayon_core.pipeline import publish
+from ayon_core.pipeline import OptionalPyblishPluginMixin, publish
 
 # this is required because of the * import in extract_nuke script
-from vl_sdv import rot3d, mat3d, VL_APPLY_ZXY  # noqa: F401
+from vl_sdv import VL_APPLY_ZXY, mat3d, rot3d  # noqa: F401
+
 
 class ExtractMatchmoveScriptNuke(publish.Extractor,
                                  OptionalPyblishPluginMixin):
@@ -43,7 +41,7 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
     order = pyblish.api.ExtractorOrder
 
     def process(self, instance: pyblish.api.Instance):
-
+        """Extract Nuke script from 3DEqualizer."""
         if not self.is_active(instance.data):
             return
 
@@ -55,13 +53,12 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
         file_path = Path(staging_dir) / "nuke_export.nk"
 
         # these patched methods are used to silence 3DEqualizer UI:
-        def patched_getWidgetValue(requester, key: str):  # noqa: N802
+        def patched_getWidgetValue(_, key: str):    # noqa: N802
             """Return value for given key in widget."""
             if key == "file_browser":
                 return file_path.as_posix()
-            elif key == "startframe_field":
-                return tde4.getCameraFrameOffset(cam)
-            return ""
+            return tde4.getCameraFrameOffset(cam) \
+                if key == "startframe_field" else ""
 
         # This is simulating artist clicking on "OK" button
         # in the export dialog.
@@ -78,8 +75,8 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
         self.log.debug("Patching 3dequalizer requester objects ...")
 
         with patch("tde4.getWidgetValue", patched_getWidgetValue), \
-             patch("tde4.postCustomRequester", patched_postCustomRequester), \
-             patch("tde4.postQuestionRequester", patched_postQuestionRequester):  # noqa: E501
+                 patch("tde4.postCustomRequester", patched_postCustomRequester), \
+                 patch("tde4.postQuestionRequester", patched_postQuestionRequester):  # noqa: E501
             with exporter_path.open() as f:
                 script = f.read()
             self.log.debug(f"Importing {exporter_path.as_posix()}")
@@ -90,9 +87,9 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
             instance.data["representations"] = []
 
         representation = {
-            'name': "nk",
-            'ext': "nk",
-            'files': file_path.name,
+            "name": "nk",
+            "ext": "nk",
+            "files": file_path.name,
             "stagingDir": staging_dir,
         }
         self.log.debug(f"output: {file_path.as_posix()}")

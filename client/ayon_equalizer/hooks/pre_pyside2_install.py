@@ -63,12 +63,12 @@ class InstallPySide2(PreLaunchHook):
 
         if not self.launch_context.env.get("TDE4_HOME"):
             if executable.name.lower() != expected_executable:
-                self.log.warning((
+                self.log.warning(
                     f"Executable {executable.as_posix()} does not lead "
                     f"to {expected_executable} file. "
                     "Can't determine 3dequalizer's python to "
                     f"check/install PySide2/PySide6. {executable.name}"
-                ))
+                )
                 return
 
             python_path_str = os.path.join(
@@ -148,9 +148,10 @@ class InstallPySide2(PreLaunchHook):
             import win32process
             from win32comext.shell import shellcon
             from win32comext.shell.shell import ShellExecuteEx
-        except Exception:
-            self.log.warning("Couldn't import 'pywin32' modules")
-            return
+        except ImportError:
+            self.log.warning(
+                "Couldn't import 'pywin32' modules", exc_info=True)
+            return None
 
         with contextlib.suppress(pywintypes.error):
             # Parameters
@@ -198,9 +199,11 @@ class InstallPySide2(PreLaunchHook):
             return process.returncode == 0
         except PermissionError:
             self.log.warning(
-                'Permission denied with command: "%s".' % " ".join(args))
+                'Permission denied with command: "%s".' % " ".join(args),
+                exc_info=True)
         except OSError as error:
-            self.log.warning('OS error has occurred: "%s".' % error)
+            self.log.warning(
+                'OS error has occurred: "%s".' % error, exc_info=True)
         except subprocess.SubprocessError:
             pass
 
@@ -210,6 +213,8 @@ class InstallPySide2(PreLaunchHook):
 
         Args:
             python_executable (Path): Path to python executable.
+            pyside_name (str): Name of pyside (to distinguish between PySide2
+                and PySide6).
 
         Returns:
             bool: True if PySide2 is installed, False otherwise.

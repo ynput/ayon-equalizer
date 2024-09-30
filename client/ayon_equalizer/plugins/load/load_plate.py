@@ -107,7 +107,6 @@ class LoadPlate(load.LoaderPlugin):
         tde4.setCameraSequenceAttr(
             camera, int(version_attributes.get("frameStart")),
             int(version_attributes.get("frameEnd")), 1)
-        print(f"Updating: {file_path} into {container['namespace']}")
         self.log.info(f"Updating: {file_path} into {container['namespace']}")
         container["representation"] = repre_entity["id"]
         container["version"] = str(version_entity["version"])

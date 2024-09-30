@@ -1,15 +1,15 @@
 from pathlib import Path
+from unittest.mock import patch
 
 import pyblish.api
 import tde4  # noqa: F401
 from ayon_core.lib import EnumDef, import_filepath
 from ayon_core.pipeline import OptionalPyblishPluginMixin, publish
-from unittest.mock import patch
 
 
 class ExtractLensDistortionNuke(publish.Extractor,
                                 OptionalPyblishPluginMixin):
-    """Extract Nuke script for matchmove.
+    """Extract Nuke Lens Distortion data.
 
     Unfortunately built-in export script from 3DEqualizer is bound to its UI,
     and it is not possible to call it directly from Python. Because of that,
@@ -26,7 +26,7 @@ class ExtractLensDistortionNuke(publish.Extractor,
     order = pyblish.api.ExtractorOrder
 
     def process(self, instance: pyblish.api.Instance):
-
+        """Extract Nuke Lens Distortion script from 3DEqualizer."""
         if not self.is_active(instance.data):
             return
 
@@ -37,11 +37,9 @@ class ExtractLensDistortionNuke(publish.Extractor,
         attr_data = self.get_attr_values_from_data(instance.data)
 
         # these patched methods are used to silence 3DEqualizer UI:
-        def patched_getWidgetValue(requester, key: str):  # noqa: N802
+        def patched_getWidgetValue(_, key: str) -> str:    # noqa: N802, ANN001
             """Return value for given key in widget."""
-            if key == "option_menu_fov_mode":
-                return attr_data["fovMode"]
-            return ""
+            return attr_data["fovMode"] if key == "option_menu_fov_mode" else ""  # noqa: E501
 
         # import export script from 3DEqualizer
         exporter_path = instance.context.data["tde4_path"] / "sys_data" / "py_scripts" / "export_nuke_LD_3DE4_Lens_Distortion_Node.py"  # noqa: E501

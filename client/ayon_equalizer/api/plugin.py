@@ -6,7 +6,7 @@ Note:
 
 """
 from abc import ABCMeta
-from typing import Dict, List
+from typing import Dict, List  # noqa: UP035
 
 import six
 from ayon_core.lib import BoolDef, EnumDef, NumberDef
@@ -23,8 +23,8 @@ class EqualizerCreator(Creator):
 
     def create(self,
                product_name: str,
-               instance_data: dict,
-               pre_create_data: dict):
+               instance_data: Dict,
+               pre_create_data: Dict):
         """Create a subset in the host application.
 
         Args:
@@ -59,7 +59,7 @@ class EqualizerCreator(Creator):
             )
             self._add_instance_to_context(created_instance)
 
-    def update_instances(self, update_list):
+    def update_instances(self, update_list: List[Dict]):
         """Update instances in the host application."""
         context = self.host.get_context_data()
         if not context.get("publish_instances"):
@@ -114,7 +114,7 @@ class ExtractScriptBase(OptionalPyblishPluginMixin):
     units = "mm"
 
     @classmethod
-    def apply_settings(cls, project_settings, system_settings):
+    def apply_settings(cls, project_settings: Dict, system_settings):
         """Apply settings from the configuration."""
         settings = project_settings["equalizer"]["publish"][
             "ExtractMatchmoveScriptMaya"]  # noqa

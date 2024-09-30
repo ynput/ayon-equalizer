@@ -1,5 +1,4 @@
 import pyblish.api
-
 from ayon_core.pipeline import PublishValidationError
 from ayon_core.pipeline.publish import ValidateContentsOrder
 
@@ -16,7 +15,8 @@ class ValidateInstanceCameraData(pyblish.api.InstancePlugin):
     families = ["matchmove"]
     label = "Validate Instance has Camera data"
 
-    def process(self, instance):
+    def process(self, instance: pyblish.api.Instance):
+        """Process the validation."""
         try:
             _ = instance.data["cameras"]
         except KeyError as e:

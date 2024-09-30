@@ -88,10 +88,10 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
             # 1 - No models
             # 2 - Selected models
             # 3 - All models
-            if model_selection_enum == "__none__":
-                model_selection = 1
-            elif model_selection_enum == "__all__":
+            if model_selection_enum == "__all__":
                 model_selection = 3
+            elif model_selection_enum == "__none__":
+                model_selection = 1
             else:
                 # take model from instance and set its selection flag on
                 # turn off all others
@@ -118,30 +118,13 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                 instance.data["representations"] = []
 
             if instance.context.data["tde4_version"].major == 7:
-                status = exporter._maya_export_mel_file(
-                    file_path.as_posix() + ".mel",  # staging path
-                    point_group,  # camera point group
-                    [c["id"] for c in instance.data["cameras"] if c["enabled"]],
-                    model_selection,  # model selection mode
-                    overscan_width,
-                    overscan_height,
-                    1 if attr_data["export_uv_textures"] else 0,
-                    scale_factor,
-                    offset,  # start frame
-                    1 if attr_data["hide_reference_frame"] else 0)
-
-                representation = {
-                    'name': "matchmoveScript",
-                    'ext': "mel",
-                    'files': file_path.name,
-                    "stagingDir": staging_dir,
-                }
-            elif instance.context.data["tde4_version"].major == 8:
-                exporter.script_version = "4.7"
-                status, npoly_warning = exporter._maya_export_python_file(
-                    file_path.as_posix(),  # staging path,
-                    point_group,  # camera point group,
-                    [c["id"] for c in instance.data["cameras"] if c["enabled"]],
+                status = exporter._maya_export_mel_file(  # noqa: SLF001
+                    f"{file_path.as_posix()}.mel",
+                    point_group,
+                    [
+                        c["id"] for c in instance.data["cameras"]
+                        if c["enabled"]
+                    ],
                     model_selection,
                     overscan_width,
                     overscan_height,
@@ -149,20 +132,47 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                     scale_factor,
                     offset,
                     1 if attr_data["hide_reference_frame"] else 0,
-                    maya_valid_name(f"{instance.data['name']}_GRP"),  # scene_name,
+                )
+
+                representation = {
+                    "name": "matchmoveScript",
+                    "ext": "mel",
+                    "files": file_path.name,
+                    "stagingDir": staging_dir,
+                }
+            elif instance.context.data["tde4_version"].major == 8:
+                exporter.script_version = "4.7"
+                status, npoly_warning = exporter._maya_export_python_file(  # noqa: SLF001
+                    file_path.as_posix(),  # staging path,
+                    point_group,  # camera point group,
+                    [
+                        c["id"] for c in instance.data["cameras"]
+                        if c["enabled"]
+                    ],
+                    model_selection,
+                    overscan_width,
+                    overscan_height,
+                    1 if attr_data["export_uv_textures"] else 0,
+                    scale_factor,
+                    offset,
+                    1 if attr_data["hide_reference_frame"] else 0,
+                    # scene_name
+                    maya_valid_name(f"{instance.data['name']}_GRP"),
                     1 if attr_data["point_sets"] else 0,
                     1 if attr_data["export_2p5d"] else 0)
                 if npoly_warning:
                     self.log.warning(f"npoly warning: {npoly_warning}")
                 representation = {
-                    'name': "py",
-                    'ext': "py",
-                    'files': file_path.name + ".py",
+                    "name": "py",
+                    "ext": "py",
+                    "files": f"{file_path.name}.py",
                     "stagingDir": staging_dir,
                 }
 
         if status != 1:
-            raise KnownPublishError(f"Export failed {status}")
+            # for EM102
+            err_msg = f"Export failed {status}"
+            raise KnownPublishError(err_msg)
 
         self.log.debug(f"output: {file_path.as_posix()}")
         instance.data["representations"].append(representation)

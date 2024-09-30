@@ -1,5 +1,4 @@
-from .addon import EqualizerAddon, EQUALIZER_HOST_DIR
-
+from .addon import EQUALIZER_HOST_DIR, EqualizerAddon
 
 __all__ = [
     "EqualizerAddon",
