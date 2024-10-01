@@ -162,7 +162,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         return context
 
-    def update_context_data(self, data: dict, _changes: dict) -> None:
+    def update_context_data(self, data: dict, changes: dict) -> None:
         """Update context data in the current workfile.
 
         Serialize context data as json and store it in the
@@ -171,7 +171,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         Args:
             data (dict): Context data.
-            _changes (dict): Changes to the context data.
+            changes (dict): Changes to the context data.
 
         Raises:
             RuntimeError: If the context data is not found.
