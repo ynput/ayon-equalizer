@@ -9,9 +9,3 @@ class CreateLensDistortionData(EqualizerCreator):
     label = "Lens Distortion"
     product_type = "lensDistortion"
     icon = "glasses"
-
-    def create(
-            self, product_name: str,
-            instance_data: dict, pre_create_data: dict) -> None:
-        """Create lens distortion data."""
-        super().create(product_name, instance_data, pre_create_data)
