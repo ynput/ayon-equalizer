@@ -160,7 +160,7 @@ class InstallQtBinding(PreLaunchHook):
             import win32process
             from win32comext.shell import shellcon
             from win32comext.shell.shell import ShellExecuteEx
-        except ImportError:
+        except Exception:  # noqa: BLE001
             self.log.warning(
                 "Couldn't import 'pywin32' modules", exc_info=True)
             return None
