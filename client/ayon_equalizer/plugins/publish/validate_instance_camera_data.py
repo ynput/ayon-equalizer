@@ -1,4 +1,6 @@
 """Plugin to validate if instance has camera data."""
+from typing import ClassVar
+
 import pyblish.api
 from ayon_core.pipeline import PublishValidationError
 from ayon_core.pipeline.publish import ValidateContentsOrder
@@ -12,8 +14,8 @@ class ValidateInstanceCameraData(pyblish.api.InstancePlugin):
     """
 
     order = ValidateContentsOrder
-    hosts = ("equalizer")
-    families = ("matchmove")
+    hosts: ClassVar[list] = ["equalizer"]
+    families: ClassVar[list] = ["matchmove"]
     label = "Validate Instance has Camera data"
 
     def process(self, instance: pyblish.api.Instance) -> None:

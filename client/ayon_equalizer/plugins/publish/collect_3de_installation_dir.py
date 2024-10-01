@@ -1,5 +1,6 @@
 """Collect camera data from the scene."""
 from pathlib import Path
+from typing import ClassVar
 
 import pyblish.api
 import tde4
@@ -9,7 +10,7 @@ class Collect3DE4InstallationDir(pyblish.api.ContextPlugin):
     """Collect camera data from the scene."""
 
     order = pyblish.api.CollectorOrder
-    hosts = ("equalizer")
+    hosts: ClassVar[list] = ["equalizer"]
     label = "Collect 3Dequalizer directory"
 
     def process(self, context: pyblish.api.Context) -> None:

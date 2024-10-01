@@ -18,7 +18,7 @@ from __future__ import annotations
 import os
 import re
 import time
-from typing import Optional
+from typing import ClassVar, Optional
 
 import tde4
 from ayon_core.lib.transcoding import IMAGE_EXTENSIONS
@@ -30,17 +30,18 @@ from ayon_equalizer.api import Container, EqualizerHost
 class LoadPlate(load.LoaderPlugin):
     """Load image sequence to the current camera."""
 
-    product_types = (
+    product_types: ClassVar[list[str]] = [
         "imagesequence",
         "review",
         "render",
         "plate",
         "image",
         "online",
-    )
+    ]
 
-    representations = ("*")
-    extensions = (ext.lstrip(".") for ext in IMAGE_EXTENSIONS)
+    representations: ClassVar[list[str]] = ["*"]
+    extensions: ClassVar[list[str]] = [
+        ext.lstrip(".") for ext in IMAGE_EXTENSIONS]
 
     label = "Load sequence"
     order = -10

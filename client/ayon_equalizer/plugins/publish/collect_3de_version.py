@@ -1,6 +1,6 @@
 """Collect camera data from the scene."""
 import re
-from typing import NamedTuple
+from typing import ClassVar, NamedTuple
 
 import pyblish.api
 import tde4
@@ -17,7 +17,7 @@ class Collect3DE4Version(pyblish.api.ContextPlugin):
     """Collect camera data from the scene."""
 
     order = pyblish.api.CollectorOrder
-    hosts = ("equalizer")
+    hosts: ClassVar[list] = ["equalizer"]
     label = "Collect 3Dequalizer version"
 
     def process(self, context: pyblish.api.Context) -> None:

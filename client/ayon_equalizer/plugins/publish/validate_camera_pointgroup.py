@@ -1,4 +1,6 @@
 """Validate Camera Point Group."""
+from typing import ClassVar
+
 import pyblish.api
 import tde4
 from ayon_core.pipeline.publish import (
@@ -14,8 +16,8 @@ class ValidateCameraPoingroup(pyblish.api.InstancePlugin):
     """
 
     order = ValidateContentsOrder
-    hosts = ("equalizer")
-    families = ("matchmove")
+    hosts: ClassVar[list] = ["equalizer"]
+    families: ClassVar[list] = ["matchmove"]
     label = "Validate Camera Point Group"
 
     def process(self, _: pyblish.api.Instance) -> None:

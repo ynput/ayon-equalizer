@@ -11,6 +11,7 @@ TODO: This can be refactored even better, split to multiple methods, etc.
 
 """
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import patch
 
 import pyblish.api
@@ -34,8 +35,8 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
     """
 
     label = "Extract Nuke Script"
-    families = ("matchmove")
-    hosts = ("equalizer")
+    families: ClassVar[list] = ["matchmove"]
+    hosts: ClassVar[list] = ["equalizer"]
     optional = True
 
     order = pyblish.api.ExtractorOrder

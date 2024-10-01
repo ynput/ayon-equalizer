@@ -1,5 +1,6 @@
 """Extract Nuke Lens Distortion data from 3DEqualizer."""
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import patch
 
 import pyblish.api
@@ -21,8 +22,8 @@ class ExtractLensDistortionNuke(publish.Extractor,
     """
 
     label = "Extract Lens Distortion Nuke node"
-    families = ("lensDistortion")
-    hosts = ("equalizer")
+    families: ClassVar[list] = ["lensDistortion"]
+    hosts: ClassVar[list] = ["equalizer"]
 
     order = pyblish.api.ExtractorOrder
 

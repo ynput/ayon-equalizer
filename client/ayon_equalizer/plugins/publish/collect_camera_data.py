@@ -1,4 +1,6 @@
 """Collect camera data from the scene."""
+from typing import ClassVar
+
 import pyblish.api
 import tde4
 
@@ -7,8 +9,8 @@ class CollectCameraData(pyblish.api.InstancePlugin):
     """Collect camera data from the scene."""
 
     order = pyblish.api.CollectorOrder
-    families = ("matchmove")
-    hosts = ("equalizer")
+    families: ClassVar[list] = ["matchmove"]
+    hosts: ClassVar[list] = ["equalizer"]
     label = "Collect camera data"
 
     def process(self, instance: pyblish.api.Instance) -> None:

@@ -1,6 +1,7 @@
 """Extract project for Maya."""
 
 from pathlib import Path
+from typing import ClassVar
 
 import pyblish.api
 import tde4
@@ -26,8 +27,8 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
     """
 
     label = "Extract Maya Script"
-    families = ("matchmove")
-    hosts = ("equalizer")
+    families: ClassVar[list] = ["matchmove"]
+    hosts: ClassVar[list] = ["equalizer"]
     optional = True
 
     order = pyblish.api.ExtractorOrder
