@@ -88,9 +88,10 @@ ignore = [
     "EM101",
     "D203", # exclusive with D203
     "D213", # exclusive with D213
-    "UP007", # because of the python campatinility
+    "UP007", # because of the python campatibility
     "ARG002", # unused argument
     "C901", # there is PLR0915 doing the same thing
+    "UP031", # format instead of percent - but we need percent for logs?
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.

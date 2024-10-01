@@ -32,9 +32,9 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
 
     order = pyblish.api.ExtractorOrder
 
-    # intentionally ignoring complexity warning (PLR0915) because of
-    # the nature of the export scripts in 3DEqualizer.
-    def process(self, instance: pyblish.api.Instance):  # noqa: PLR0915
+    # intentionally ignoring complexity warning (PLR0915 and PLR0912) because
+    # of the nature of the export scripts in 3DEqualizer.
+    def process(self, instance: pyblish.api.Instance):  # noqa: PLR0915, PLR0912
         """Extract Maya script from 3DEqualizer.
 
         This method is using export script shipped with 3DEqualizer to
