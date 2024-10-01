@@ -1,3 +1,4 @@
+"""Create Matchmove product."""
 import tde4
 from ayon_core.lib import EnumDef
 

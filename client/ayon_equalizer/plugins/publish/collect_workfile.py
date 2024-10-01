@@ -11,5 +11,5 @@ class CollectWorkfile(pyblish.api.ContextPlugin):
     label = "Collect Workfile"
 
     def process(self, context: pyblish.api.Context):
-
+        """Collect 3DE project as a workfile."""
         context.data["currentFile"] = tde4.getProjectPath()

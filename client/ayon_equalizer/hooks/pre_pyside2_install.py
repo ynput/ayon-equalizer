@@ -20,6 +20,7 @@ from typing import Union
 from ayon_applications import LaunchTypes, PreLaunchHook
 
 python_versions = {7, 8, 9, 10, 11, 12, 13}
+MAX_PYSIDE2_PYTHON_VERSION = 10
 
 class InstallPySide2(PreLaunchHook):
     """Install Qt binding to 3dequalizer's python packages."""
@@ -28,9 +29,10 @@ class InstallPySide2(PreLaunchHook):
     launch_types = {LaunchTypes.local}
 
     def execute(self):
+        """Entry point for the hook."""
         try:
             self._execute()
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.log.warning((
                 f"Processing of {self.__class__.__name__} "
                 "crashed."), exc_info=True
@@ -38,7 +40,7 @@ class InstallPySide2(PreLaunchHook):
 
     @staticmethod
     def _find_python_executable(
-            path_str: str) -> tuple[Union[Path, None], Union[int, None]]:  # noqa: UP007
+            path_str: str) -> tuple[Union[Path, None], Union[int, None]]:
         """Find python executable in 3de4's directory.
 
         Args:
@@ -54,7 +56,14 @@ class InstallPySide2(PreLaunchHook):
                 return python_dir, version
         return None, None
 
-    def _execute(self):
+    def _execute(self) -> None:  # noqa: PLR0912
+        """Execute the hook.
+
+        Todo:
+            * This method is too complex (PLR0912). It should be refactored
+              to smaller methods.
+
+        """
         platform = system().lower()
         executable = Path(self.launch_context.executable.executable_path)
         expected_executable = "3de4"
@@ -103,7 +112,7 @@ class InstallPySide2(PreLaunchHook):
             return
 
         pyside_name = "PySide6"
-        if py_version < 11:
+        if py_version <= MAX_PYSIDE2_PYTHON_VERSION:
             pyside_name = "PySide2"
 
 
@@ -196,7 +205,7 @@ class InstallPySide2(PreLaunchHook):
                 args, stdout=subprocess.PIPE, universal_newlines=True
             )
             process.communicate()
-            return process.returncode == 0
+
         except PermissionError:
             self.log.warning(
                 'Permission denied with command: "%s".' % " ".join(args),
@@ -206,6 +215,8 @@ class InstallPySide2(PreLaunchHook):
                 'OS error has occurred: "%s".' % error, exc_info=True)
         except subprocess.SubprocessError:
             pass
+        else:
+            return process.returncode == 0
 
     @staticmethod
     def is_pyside_installed(python_executable: Path, pyside_name: str) -> bool:

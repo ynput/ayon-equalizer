@@ -14,7 +14,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pyblish.api
-import tde4  # noqa: F401
+import tde4
 from ayon_core.pipeline import OptionalPyblishPluginMixin, publish
 
 # this is required because of the * import in extract_nuke script
@@ -53,7 +53,7 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
         file_path = Path(staging_dir) / "nuke_export.nk"
 
         # these patched methods are used to silence 3DEqualizer UI:
-        def patched_getWidgetValue(_, key: str):    # noqa: N802
+        def patched_getWidgetValue(_, key: str) -> str:  # noqa: N802, ANN001
             """Return value for given key in widget."""
             if key == "file_browser":
                 return file_path.as_posix()
@@ -62,12 +62,12 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
 
         # This is simulating artist clicking on "OK" button
         # in the export dialog.
-        def patched_postCustomRequester(*args, **kwargs):  # noqa: N802
+        def patched_postCustomRequester(*args, **kwargs) -> int:  # noqa: N802, ANN002, ANN003, ARG001
             return 1
 
         # This is silencing success/error message after the script
         # is exported.
-        def patched_postQuestionRequester(*args, **kwargs):  # noqa: N802
+        def patched_postQuestionRequester(*args, **kwargs) -> None:  # noqa: N802, ANN002, ANN003, ARG001
             return None
 
         # import maya export script from 3DEqualizer
@@ -80,7 +80,7 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
             with exporter_path.open() as f:
                 script = f.read()
             self.log.debug(f"Importing {exporter_path.as_posix()}")
-            exec(script)
+            exec(script)  # noqa: S102
 
         # create representation data
         if "representations" not in instance.data:

@@ -1,4 +1,9 @@
+"""3DEqualizer Addon for AYON.
+
+Addon definition for 3DEqualizer host in AYON.
+"""
 import os
+from typing import Any
 
 from ayon_core.addon import AYONAddon, IHostAddon
 
@@ -16,12 +21,12 @@ class EqualizerAddon(AYONAddon, IHostAddon):
     heartbeat = 500
     enabled = True
 
-    def initialize(self, settings):
+    def initialize(self, settings: dict[str, Any]):
         """Initialize Equalizer Addon."""
         self.heartbeat = settings.get("heartbeat_interval", 500)
         self.enabled = True
 
-    def add_implementation_envs(self, env, _app):
+    def add_implementation_envs(self, env: dict, _app: str):
         """Add 3DEqualizer specific environment variables.
 
         3DEqualizer utilize TDE4_ROOT for its root directory
@@ -31,6 +36,7 @@ class EqualizerAddon(AYONAddon, IHostAddon):
 
         Arguments:
             env (dict): Environment variables.
+            _app (str): Application name.
 
         """
         startup_path = os.path.join(EQUALIZER_HOST_DIR, "startup")

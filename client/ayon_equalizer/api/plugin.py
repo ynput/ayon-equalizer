@@ -5,8 +5,9 @@ Note:
     3dequalizer 8.0 uses Python 3.9
 
 """
+from __future__ import annotations
+
 from abc import ABCMeta
-from typing import Dict, List  # noqa: UP035
 
 import six
 from ayon_core.lib import BoolDef, EnumDef, NumberDef
@@ -23,14 +24,14 @@ class EqualizerCreator(Creator):
 
     def create(self,
                product_name: str,
-               instance_data: Dict,
-               pre_create_data: Dict):
+               instance_data: dict,
+               _pre_create_data: dict):
         """Create a subset in the host application.
 
         Args:
             product_name (str): Name of the subset to create.
             instance_data (dict): Data of the instance to create.
-            pre_create_data (dict): Data from the pre-create step.
+            _pre_create_data (dict): Data from the pre-create step.
 
         Returns:
             ayon_core.pipeline.CreatedInstance: Created instance.
@@ -59,7 +60,7 @@ class EqualizerCreator(Creator):
             )
             self._add_instance_to_context(created_instance)
 
-    def update_instances(self, update_list: List[Dict]):
+    def update_instances(self, update_list: list[dict]):
         """Update instances in the host application."""
         context = self.host.get_context_data()
         if not context.get("publish_instances"):
@@ -87,7 +88,7 @@ class EqualizerCreator(Creator):
 
         self.host.update_context_data(context, changes=update_list)
 
-    def remove_instances(self, instances: List[Dict]):
+    def remove_instances(self, instances: list[dict]):
         """Remove instances from the host application."""
         context = self.host.get_context_data()
         if not context.get("publish_instances"):
@@ -114,10 +115,12 @@ class ExtractScriptBase(OptionalPyblishPluginMixin):
     units = "mm"
 
     @classmethod
-    def apply_settings(cls, project_settings: Dict, system_settings):
+    def apply_settings(
+            cls, project_settings: dict,
+            system_settings: dict) -> None:  # noqa: ARG003
         """Apply settings from the configuration."""
         settings = project_settings["equalizer"]["publish"][
-            "ExtractMatchmoveScriptMaya"]  # noqa
+            "ExtractMatchmoveScriptMaya"]
 
         cls.hide_reference_frame = settings.get(
             "hide_reference_frame", cls.hide_reference_frame)

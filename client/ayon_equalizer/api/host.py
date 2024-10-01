@@ -11,7 +11,7 @@ import dataclasses
 import json
 import os
 import re
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import pyblish.api
 import tde4
@@ -23,7 +23,9 @@ from ayon_core.pipeline import (
 from qtpy import QtCore, QtWidgets
 
 from ayon_equalizer import EQUALIZER_HOST_DIR
-from ayon_equalizer.api.pipeline import Container
+
+if TYPE_CHECKING:
+    from ayon_equalizer.api.pipeline import Container
 
 CONTEXT_REGEX = re.compile(
     r"AYON_CONTEXT::(?P<context>.*?)::AYON_CONTEXT_END",
@@ -90,17 +92,19 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         """
         if not dst_path:
             dst_path = tde4.getProjectPath()
-        result = tde4.saveProject(dst_path, True)
+        result = tde4.saveProject(dst_path, True)  # noqa: FBT003
         if not bool(result):
-            raise RuntimeError(f"Failed to save workfile {dst_path}.")
+            err_msg = f"Failed to save workfile {dst_path}."
+            raise RuntimeError(err_msg)
 
         return dst_path
 
     def open_workfile(self, filepath: str):
         """Open a workfile in 3DEqualizer."""
-        result = tde4.loadProject(filepath, True)
+        result = tde4.loadProject(filepath, True)  # noqa: FBT003
         if not bool(result):
-            raise RuntimeError(f"Failed to open workfile {filepath}.")
+            err_msg = f"Failed to open workfile {filepath}."
+            raise RuntimeError(err_msg)
 
         return filepath
 
@@ -131,15 +135,15 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         to_remove = [
             idx
             for idx, _container in enumerate(containers)
-            if _container["name"] == container["name"]
-            and _container["namespace"] == container["namespace"]
+            if _container["name"] == container.name
+            and _container["namespace"] == container.namespace
         ]
         for idx in reversed(to_remove):
             containers.pop(idx)
 
         context_data["containers"] = [*containers, container]
 
-        self.update_context_data(context_data, changes={})
+        self.update_context_data(context_data, {})
 
     def get_context_data(self) -> dict:
         """Get context data from the current workfile.
@@ -163,7 +167,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         return context
 
-    def update_context_data(self, data: dict, changes: dict):
+    def update_context_data(self, data: dict, _changes: dict):
         """Update context data in the current workfile.
 
         Serialize context data as json and store it in the
@@ -172,7 +176,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         Args:
             data (dict): Context data.
-            changes (dict): Changes to the context data.
+            _changes (dict): Changes to the context data.
 
         Raises:
             RuntimeError: If the context data is not found.
@@ -203,6 +207,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         tde4.updateGUI()
 
     def install(self):
+        """Install the host."""
         if not QtCore.QCoreApplication.instance():
             app = QtWidgets.QApplication([])
             self._qapp = app
@@ -219,13 +224,16 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
             "EqualizerHost._timer", int(heartbeat_interval))
 
     @staticmethod
-    def _timer():
+    def _timer() -> None:
+        """Timer callback function."""
         QtWidgets.QApplication.instance().processEvents(
             QtCore.QEventLoop.AllEvents)
 
     @classmethod
-    def get_host(cls):
+    def get_host(cls) -> EqualizerHost:
+        """Get the host instance."""
         return cls._instance
 
     def get_main_window(self):
+        """Get the main window of the host application."""
         return self._qapp.activeWindow()

@@ -1,3 +1,4 @@
+"""Plugin to validate if instance has camera data."""
 import pyblish.api
 from ayon_core.pipeline import PublishValidationError
 from ayon_core.pipeline.publish import ValidateContentsOrder

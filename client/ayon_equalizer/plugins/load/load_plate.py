@@ -13,16 +13,16 @@ TODO (antirotor):
       to image corrections.
 
 """
+from __future__ import annotations
+
 import os
 import re
 import time
+from typing import Optional
 
 import tde4
 from ayon_core.lib.transcoding import IMAGE_EXTENSIONS
-from ayon_core.pipeline import (
-    get_representation_path,
-    load,
-)
+from ayon_core.pipeline import get_representation_path, load
 
 from ayon_equalizer.api import Container, EqualizerHost
 
@@ -47,7 +47,8 @@ class LoadPlate(load.LoaderPlugin):
     icon = "code-fork"
     color = "orange"
 
-    def load(self, context, name=None, namespace=None, options=None):
+    def load(self, context: dict, name: Optional[str] = None,
+             namespace: Optional[str] = None, options: Optional[dict]=None):
         """Load image sequence to the current camera."""
         repre_entity = context["representation"]
         version_entity = context["version"]
@@ -82,7 +83,7 @@ class LoadPlate(load.LoaderPlugin):
         EqualizerHost.get_host().add_container(container)
         tde4.updateGUI()
 
-    def update(self, container, context):
+    def update(self, container: dict, context: dict):
         """Update the image sequence on the current camera."""
         version_entity = context["version"]
         version_attributes = version_entity["attrib"]

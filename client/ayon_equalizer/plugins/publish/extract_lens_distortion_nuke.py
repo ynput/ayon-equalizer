@@ -1,8 +1,9 @@
+"""Extract Nuke Lens Distortion data from 3DEqualizer."""
 from pathlib import Path
 from unittest.mock import patch
 
 import pyblish.api
-import tde4  # noqa: F401
+import tde4
 from ayon_core.lib import EnumDef, import_filepath
 from ayon_core.pipeline import OptionalPyblishPluginMixin, publish
 
@@ -46,7 +47,8 @@ class ExtractLensDistortionNuke(publish.Extractor,
         self.log.debug(f"Importing {exporter_path.as_posix()}")
         exporter = import_filepath(exporter_path.as_posix())
         with patch("tde4.getWidgetValue", patched_getWidgetValue):
-                exporter.exportNukeDewarpNode(cam, offset, file_path.as_posix())
+                exporter.exportNukeDewarpNode(
+                    cam, offset, file_path.as_posix())
 
         # create representation data
         if "representations" not in instance.data:
@@ -62,7 +64,8 @@ class ExtractLensDistortionNuke(publish.Extractor,
         instance.data["representations"].append(representation)
 
     @classmethod
-    def get_attribute_defs(cls):
+    def get_attribute_defs(cls) -> list:
+        """Return instance attribute definitions."""
         return [
             *super().get_attribute_defs(),
             EnumDef("fovMode",

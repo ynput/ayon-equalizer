@@ -12,14 +12,17 @@ class CollectCameraData(pyblish.api.InstancePlugin):
     label = "Collect camera data"
 
     def process(self, instance: pyblish.api.Instance):
-        # handle camera selection.
-        # possible values are:
-        #   - __current__ - current camera
-        #   - __ref__ - reference cameras
-        #   - __seq__ - sequence cameras
-        #   - __all__ - all cameras
-        #   - camera_id - specific camera
+        """Collect Camera data from 3DE.
 
+        Handle camera selection. Possible values are:
+
+           - ``__current__`` - current camera
+           - ``__ref__`` - reference cameras
+           - ``__seq__`` - sequence cameras
+           - ``__all__`` - all cameras
+           - ``camera_id`` - specific camera
+
+        """
         try:
             camera_sel = instance.data["creator_attributes"]["camera_selection"]  # noqa: E501
         except KeyError:

@@ -1,3 +1,4 @@
+"""Create lens distortion data."""
 from ayon_equalizer.api import EqualizerCreator
 
 

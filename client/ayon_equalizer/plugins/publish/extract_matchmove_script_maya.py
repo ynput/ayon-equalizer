@@ -11,12 +11,11 @@ from ayon_core.pipeline import (
     publish,
 )
 
-from ayon_equalizer.api import (
-    ExtractScriptBase,
-    maintained_model_selection,
-)
+from ayon_equalizer.api import ExtractScriptBase, maintained_model_selection
 from ayon_equalizer.api.lib import maya_valid_name
 
+EQUALIZER_7 = 7
+EQUALIZER_8 = 8
 
 class ExtractMatchmoveScriptMaya(publish.Extractor,
                                  ExtractScriptBase,
@@ -33,7 +32,9 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
 
     order = pyblish.api.ExtractorOrder
 
-    def process(self, instance: pyblish.api.Instance):
+    # intentionally ignoring complexity warning (PLR0915) because of
+    # the nature of the export scripts in 3DEqualizer.
+    def process(self, instance: pyblish.api.Instance):  # noqa: PLR0915
         """Extract Maya script from 3DEqualizer.
 
         This method is using export script shipped with 3DEqualizer to
@@ -117,7 +118,7 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
             if "representations" not in instance.data:
                 instance.data["representations"] = []
 
-            if instance.context.data["tde4_version"].major == 7:
+            if instance.context.data["tde4_version"].major == EQUALIZER_7:
                 status = exporter._maya_export_mel_file(  # noqa: SLF001
                     f"{file_path.as_posix()}.mel",
                     point_group,
@@ -140,7 +141,7 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                     "files": file_path.name,
                     "stagingDir": staging_dir,
                 }
-            elif instance.context.data["tde4_version"].major == 8:
+            elif instance.context.data["tde4_version"].major == EQUALIZER_8:
                 exporter.script_version = "4.7"
                 status, npoly_warning = exporter._maya_export_python_file(  # noqa: SLF001
                     file_path.as_posix(),  # staging path,

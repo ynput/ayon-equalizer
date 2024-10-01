@@ -1,3 +1,4 @@
+"""Validate Camera Point Group."""
 import pyblish.api
 import tde4
 from ayon_core.pipeline.publish import (

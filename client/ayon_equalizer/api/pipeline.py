@@ -1,3 +1,4 @@
+"""Pipeline API module."""
 import contextlib
 from dataclasses import dataclass
 

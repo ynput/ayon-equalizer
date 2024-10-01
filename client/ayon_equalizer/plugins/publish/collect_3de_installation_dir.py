@@ -1,7 +1,8 @@
 """Collect camera data from the scene."""
+from pathlib import Path
+
 import pyblish.api
 import tde4
-from pathlib import Path
 
 
 class Collect3DE4InstallationDir(pyblish.api.ContextPlugin):
@@ -11,6 +12,7 @@ class Collect3DE4InstallationDir(pyblish.api.ContextPlugin):
     hosts = ["equalizer"]
     label = "Collect 3Dequalizer directory"
 
-    def process(self, context):
+    def process(self, context: pyblish.api.Context):
+        """COllect installation directory."""
         tde4_path = Path(tde4.get3DEInstallPath())
         context.data["tde4_path"] = tde4_path
