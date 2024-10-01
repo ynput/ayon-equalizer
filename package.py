@@ -1,3 +1,4 @@
+"""3DEqualizer addon package definition."""
 name = "equalizer"
 title = "3DEqualizer"
 version = "0.1.0-dev.1"
