@@ -1,7 +1,7 @@
 """Define Manage menu item."""
 #
 # 3DE4.script.name:     Manage ...
-# 3DE4.script.gui:      Main Window::Ayon
+# 3DE4.script.gui:      Main Window::AYON
 # 3DE4.script.comment:  Open AYON Publisher tool
 #
 

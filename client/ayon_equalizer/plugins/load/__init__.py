@@ -1,1 +1,1 @@
-"""Loader plugin for Ayon Equalizer."""
+"""Loader plugin for AYON Equalizer."""

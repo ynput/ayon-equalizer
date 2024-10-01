@@ -1,1 +1,1 @@
-"""Hooks for Ayon Equalizer."""
+"""Hooks for AYON Equalizer."""

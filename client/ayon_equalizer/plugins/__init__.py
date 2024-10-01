@@ -1,1 +1,1 @@
-"""Plugins for Ayon Equalizer."""
+"""Plugins for AYON Equalizer."""

@@ -1,1 +1,1 @@
-"""Creator plugin for Ayon Equalizer."""
+"""Creator plugin for AYON Equalizer."""
