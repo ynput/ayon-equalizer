@@ -22,20 +22,20 @@ from ayon_applications import LaunchTypes, PreLaunchHook
 python_versions = {7, 8, 9, 10, 11, 12, 13}
 MAX_PYSIDE2_PYTHON_VERSION = 10
 
-class InstallPySide2(PreLaunchHook):
+class InstallQtBinding(PreLaunchHook):
     """Install Qt binding to 3dequalizer's python packages."""
 
-    app_groups = {"equalizer", "sdv_3dequalizer"}
-    launch_types = {LaunchTypes.local}
+    app_groups = ("equalizer", "sdv_3dequalizer")
+    launch_types = (LaunchTypes.local)
 
-    def execute(self):
+    def execute(self) -> None:
         """Entry point for the hook."""
         try:
             self._execute()
         except Exception:  # noqa: BLE001
-            self.log.warning((
-                f"Processing of {self.__class__.__name__} "
-                "crashed."), exc_info=True
+            self.log.warning(
+                "Processing of %s crashed.",
+                self.__class__.__name__, exc_info=True
             )
 
     @staticmethod
@@ -56,7 +56,7 @@ class InstallPySide2(PreLaunchHook):
                 return python_dir, version
         return None, None
 
-    def _execute(self) -> None:  # noqa: PLR0912
+    def _execute(self) -> None:  # noqa: PLR0912, C901
         """Execute the hook.
 
         Todo:
@@ -73,10 +73,12 @@ class InstallPySide2(PreLaunchHook):
         if not self.launch_context.env.get("TDE4_ROOT"):
             if executable.name.lower() != expected_executable:
                 self.log.warning(
-                    f"Executable {executable.as_posix()} does not lead "
-                    f"to {expected_executable} file. "
+                    "Executable %s does not lead "
+                    "to %s file. "
                     "Can't determine 3dequalizer's python to "
-                    f"check/install PySide2/PySide6. {executable.name}"
+                    "check/install PySide2/PySide6. %s",
+                    executable.as_posix(), expected_executable,
+                    executable.name
                 )
                 return
 
@@ -93,7 +95,7 @@ class InstallPySide2(PreLaunchHook):
         if not python_dir:
             self.log.warning(
                 "Couldn't find python executable "
-                "for 3de4 in %s" % python_path_str)
+                "for 3de4 in %s", python_path_str)
             return
 
         if platform == "windows":
@@ -107,7 +109,7 @@ class InstallPySide2(PreLaunchHook):
         if not python_executable.exists():
             self.log.warning(
                 "Couldn't find python executable "
-                "for 3de4 %s" % python_executable.as_posix())
+                "for 3de4 %s", python_executable.as_posix())
 
             return
 
@@ -119,23 +121,24 @@ class InstallPySide2(PreLaunchHook):
         # Check if PySide2 is installed and skip if yes
         if self.is_pyside_installed(python_executable, pyside_name):
             self.log.debug(
-                "3Dequalizer has already installed %s." % pyside_name)
+                "3Dequalizer has already installed %s.", pyside_name)
             return
 
         # Install PySide2/PySide6 in 3de4's python
         if platform == "windows":
             result = self.install_pyside_windows(python_executable)
         else:
-            result = self.install_pyside(python_executable)
+            result = self.install_pyside(python_executable, pyside_name)
 
         if result:
             self.log.info(
-                "Successfully installed %s module to 3de4." % pyside_name)
+                "Successfully installed %s module to 3de4.", pyside_name)
         else:
             self.log.warning(
-                "Failed to install %s module to 3de4." % pyside_name)
+                "Failed to install %s module to 3de4.", pyside_name)
 
-    def install_pyside_windows(self, python_executable: Path):
+    def install_pyside_windows(
+            self, python_executable: Path) -> Union[None, int]:
         """Install PySide2 python module to 3de4's python.
 
         Installation requires administration rights that's why it is required
@@ -184,7 +187,8 @@ class InstallPySide2(PreLaunchHook):
             return_code = win32process.GetExitCodeProcess(process_handle)
             return return_code == 0
 
-    def install_pyside(self, python_executable: Path, pyside_name: str):
+    def install_pyside(
+            self, python_executable: Path, pyside_name: str) -> int:
         """Install PySide2 python module to 3de4's python."""
         args = [
             python_executable.as_posix(),
@@ -208,11 +212,11 @@ class InstallPySide2(PreLaunchHook):
 
         except PermissionError:
             self.log.warning(
-                'Permission denied with command: "%s".' % " ".join(args),
+                'Permission denied with command: "%s".', " ".join(args),
                 exc_info=True)
         except OSError as error:
             self.log.warning(
-                'OS error has occurred: "%s".' % error, exc_info=True)
+                'OS error has occurred: "%s".', error, exc_info=True)
         except subprocess.SubprocessError:
             pass
         else:
