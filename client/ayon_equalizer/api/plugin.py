@@ -7,9 +7,6 @@ Note:
 """
 from __future__ import annotations
 
-from abc import ABCMeta
-
-import six
 from ayon_core.lib import BoolDef, EnumDef, NumberDef
 from ayon_core.pipeline import (
     CreatedInstance,
@@ -18,7 +15,6 @@ from ayon_core.pipeline import (
 )
 
 
-@six.add_metaclass(ABCMeta)
 class EqualizerCreator(Creator):
     """Base class for creating instances in 3DEqualizer."""
 
