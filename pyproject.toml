@@ -75,23 +75,15 @@ ignore = [
     "PTH",
     "ANN101",
     "ANN102",
-    "ANN201",
     "ANN204",
-    "G002",
-    "G004",
     "COM812",
-    "PT009",
-    "RUF012",
     "S603",
     "ERA001",
     "TRY003",
-    "EM101",
     "D203", # exclusive with D203
     "D213", # exclusive with D213
     "UP007", # because of the python campatibility
     "ARG002", # unused argument
-    "C901", # there is PLR0915 doing the same thing
-    "UP031", # format instead of percent - but we need percent for logs?
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
@@ -102,6 +94,8 @@ unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 exclude = []
+
+pydocstyle.convention = "google"
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
