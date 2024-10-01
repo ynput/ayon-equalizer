@@ -13,7 +13,7 @@ class CreateMatchMove(EqualizerCreator):
     product_type = "matchmove"
     icon = "camera"
 
-    def get_instance_attr_defs(self):
+    def get_instance_attr_defs(self) -> list:
         """Return instance attribute definitions."""
         camera_enum = [
             {"value": "__all__", "label": "All Cameras"},
@@ -56,7 +56,7 @@ class CreateMatchMove(EqualizerCreator):
 
     def create(
             self, product_name: str,
-            instance_data: dict, pre_create_data: dict):
+            instance_data: dict, pre_create_data: dict) -> None:
         """Create Match Move subset."""
         self.log.debug("CreateMatchMove.create")
         super().create(product_name, instance_data, pre_create_data)

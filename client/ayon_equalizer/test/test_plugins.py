@@ -34,11 +34,11 @@ class Tde4Mock:
 
     _notes = ""
 
-    def isProjectUpToDate(self):  # noqa: N802
+    def isProjectUpToDate(self) -> bool:  # noqa: N802
         """Mock function to check if project is up to date."""
         return True
 
-    def setProjectNotes(self, notes: str):  # noqa: N802
+    def setProjectNotes(self, notes: str) -> None:  # noqa: N802
         """Mock function to set project notes."""
         self._notes = notes
 
@@ -50,13 +50,13 @@ class Tde4Mock:
 tde4 = Tde4Mock()
 
 
-def get_context_data():
+def get_context_data() -> dict:
     """Get context data from project notes."""
     m = re.search(CONTEXT_REGEX, tde4.getProjectNotes())
     return json.loads(m["context"]) if m else {}
 
 
-def update_context_data(data: str, _: dict):
+def update_context_data(data: dict, _: dict) -> None:
     """Update context data in project notes."""
     m = re.search(CONTEXT_REGEX, tde4.getProjectNotes())
     if not m:
@@ -76,7 +76,7 @@ def get_containers() -> list:
     return get_context_data().get("containers", [])
 
 
-def add_container(container: Container):
+def add_container(container: Container) -> None:
     """Add container to context data."""
     context_data = get_context_data()
     containers = get_context_data().get("containers", [])
@@ -95,44 +95,38 @@ def add_container(container: Container):
 class TestEqualizer(unittest.TestCase):
     """Test 3DEqualizer plugin."""
 
-    def test_context_data(self):
+    def test_context_data(self) -> None:
         """Test context data."""
         # ensure empty project notest
 
         data = get_context_data()
-        self.assertEqual({}, data, "context data is not empty")
+        assert data == {}, "context data is not empty"  # noqa: S101
 
         # add container
         add_container(
             Container(name="test", representation="test_A")
         )
 
-        self.assertEqual(
-            1, len(get_containers()), "container not added")
-        self.assertEqual(
-            get_containers()[0]["name"],
-            "test", "container name is not correct")
+        assert len(get_containers()) == 1, "container not added"  # noqa: S101
+        assert get_containers()[0]["name"] == "test",\
+            "container name is not correct"  # noqa: S101
 
         # add another container
         add_container(
             Container(name="test2", representation="test_B")
         )
 
-        self.assertEqual(
-            2, len(get_containers()), "container not added")
-        self.assertEqual(
-            get_containers()[1]["name"],
-            "test2", "container name is not correct")
+        assert len(get_containers()) == 2, "container not added"  # noqa: S101,PLR2004
+        assert get_containers()[1]["name"] == "test2",\
+            "container name is not correct"  # noqa: S101
 
         # update container
         add_container(
             Container(name="test2", representation="test_C")
         )
-        self.assertEqual(
-            2, len(get_containers()), "container not updated")
-        self.assertEqual(
-            get_containers()[1]["representation"],
-            "test_C", "container name is not correct")
+        assert len(get_containers()) == 2, "container not updated"  # noqa: S101,PLR2004
+        assert get_containers()[1]["representation"] == "test_C",\
+            "container name is not correct"  # noqa: S101
 
 
 if __name__ == "__main__":

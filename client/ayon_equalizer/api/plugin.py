@@ -25,7 +25,7 @@ class EqualizerCreator(Creator):
     def create(self,
                product_name: str,
                instance_data: dict,
-               _pre_create_data: dict):
+               _pre_create_data: dict) -> CreatedInstance:
         """Create a subset in the host application.
 
         Args:
@@ -46,7 +46,7 @@ class EqualizerCreator(Creator):
         self._add_instance_to_context(instance)
         return instance
 
-    def collect_instances(self):
+    def collect_instances(self) -> None:
         """Collect instances from the host application.
 
         Returns:
@@ -60,7 +60,7 @@ class EqualizerCreator(Creator):
             )
             self._add_instance_to_context(created_instance)
 
-    def update_instances(self, update_list: list[dict]):
+    def update_instances(self, update_list: list[dict]) -> None:
         """Update instances in the host application."""
         context = self.host.get_context_data()
         if not context.get("publish_instances"):
@@ -88,7 +88,7 @@ class EqualizerCreator(Creator):
 
         self.host.update_context_data(context, changes=update_list)
 
-    def remove_instances(self, instances: list[dict]):
+    def remove_instances(self, instances: list[dict]) -> None:
         """Remove instances from the host application."""
         context = self.host.get_context_data()
         if not context.get("publish_instances"):

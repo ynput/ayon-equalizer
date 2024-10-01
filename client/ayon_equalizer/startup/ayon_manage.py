@@ -11,7 +11,7 @@ from ayon_core.tools.utils import host_tools
 from ayon_equalizer.api import EqualizerHost
 
 
-def install_3de_host():
+def install_3de_host() -> None:
     """Install 3DEqualizer host."""
     print("Running AYON integration ...")  # noqa: T201
     install_host(EqualizerHost())

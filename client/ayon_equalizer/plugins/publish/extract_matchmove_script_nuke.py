@@ -34,13 +34,13 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
     """
 
     label = "Extract Nuke Script"
-    families = ["matchmove"]
-    hosts = ["equalizer"]
+    families = ("matchmove")
+    hosts = ("equalizer")
     optional = True
 
     order = pyblish.api.ExtractorOrder
 
-    def process(self, instance: pyblish.api.Instance):
+    def process(self, instance: pyblish.api.Instance) -> None:
         """Extract Nuke script from 3DEqualizer."""
         if not self.is_active(instance.data):
             return
@@ -79,7 +79,7 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
                  patch("tde4.postQuestionRequester", patched_postQuestionRequester):  # noqa: E501
             with exporter_path.open() as f:
                 script = f.read()
-            self.log.debug(f"Importing {exporter_path.as_posix()}")
+            self.log.debug("Importing %s", exporter_path.as_posix())
             exec(script)  # noqa: S102
 
         # create representation data
@@ -92,5 +92,5 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
             "files": file_path.name,
             "stagingDir": staging_dir,
         }
-        self.log.debug(f"output: {file_path.as_posix()}")
+        self.log.debug("output: %s", file_path.as_posix())
         instance.data["representations"].append(representation)

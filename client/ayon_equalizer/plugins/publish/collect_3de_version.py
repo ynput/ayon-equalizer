@@ -17,16 +17,17 @@ class Collect3DE4Version(pyblish.api.ContextPlugin):
     """Collect camera data from the scene."""
 
     order = pyblish.api.CollectorOrder
-    hosts = ["equalizer"]
+    hosts = ("equalizer")
     label = "Collect 3Dequalizer version"
 
-    def process(self, context: pyblish.api.Context):
+    def process(self, context: pyblish.api.Context) -> None:
         """Collect 3DEqualizer version."""
         match = re.search(
             r"3DEqualizer4 Release (?P<major>\d+).(?P<minor>\d+)",
             tde4.get3DEVersion())
         if not match["major"] or not match["minor"]:
-            raise ValueError("Failed to extract 3DEqualizer version")
+            error_msg = "Failed to extract 3DEqualizer version"
+            raise ValueError(error_msg)
 
         version = Version(
             major=int(match["major"]),

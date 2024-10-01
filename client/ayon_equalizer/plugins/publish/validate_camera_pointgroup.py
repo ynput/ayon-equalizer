@@ -14,15 +14,16 @@ class ValidateCameraPoingroup(pyblish.api.InstancePlugin):
     """
 
     order = ValidateContentsOrder
-    hosts = ["equalizer"]
-    families = ["matchmove"]
+    hosts = ("equalizer")
+    families = ("matchmove")
     label = "Validate Camera Point Group"
 
-    def process(self, _: pyblish.api.Instance):
+    def process(self, _: pyblish.api.Instance) -> None:
         """Process the validation."""
         valid = any(
             tde4.getPGroupType(point_group) == "CAMERA"
             for point_group in tde4.getPGroupList()
         )
         if not valid:
-            raise PublishValidationError("Missing Camera Point Group")
+            error_msg = "Missing Camera Point Group"
+            raise PublishValidationError(error_msg)

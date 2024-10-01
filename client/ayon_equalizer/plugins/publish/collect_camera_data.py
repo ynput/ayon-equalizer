@@ -7,11 +7,11 @@ class CollectCameraData(pyblish.api.InstancePlugin):
     """Collect camera data from the scene."""
 
     order = pyblish.api.CollectorOrder
-    families = ["matchmove"]
-    hosts = ["equalizer"]
+    families = ("matchmove")
+    hosts = ("equalizer")
     label = "Collect camera data"
 
-    def process(self, instance: pyblish.api.Instance):
+    def process(self, instance: pyblish.api.Instance) -> None:
         """Collect Camera data from 3DE.
 
         Handle camera selection. Possible values are:

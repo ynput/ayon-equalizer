@@ -12,6 +12,6 @@ class CreateLensDistortionData(EqualizerCreator):
 
     def create(
             self, product_name: str,
-            instance_data: dict, pre_create_data: dict):
+            instance_data: dict, pre_create_data: dict) -> None:
         """Create lens distortion data."""
         super().create(product_name, instance_data, pre_create_data)

@@ -21,7 +21,7 @@ class Container:
 
 
 @contextlib.contextmanager
-def maintained_model_selection():
+def maintained_model_selection() -> None:
     """Maintain model selection during context."""
     point_groups = tde4.getPGroupList()
     point_group = next(

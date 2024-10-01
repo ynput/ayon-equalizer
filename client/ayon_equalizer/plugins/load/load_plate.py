@@ -30,17 +30,17 @@ from ayon_equalizer.api import Container, EqualizerHost
 class LoadPlate(load.LoaderPlugin):
     """Load image sequence to the current camera."""
 
-    product_types = [
+    product_types = (
         "imagesequence",
         "review",
         "render",
         "plate",
         "image",
         "online",
-    ]
+    )
 
-    representations = ["*"]
-    extensions = {ext.lstrip(".") for ext in IMAGE_EXTENSIONS}
+    representations = ("*")
+    extensions = (ext.lstrip(".") for ext in IMAGE_EXTENSIONS)
 
     label = "Load sequence"
     order = -10
@@ -48,7 +48,8 @@ class LoadPlate(load.LoaderPlugin):
     color = "orange"
 
     def load(self, context: dict, name: Optional[str] = None,
-             namespace: Optional[str] = None, options: Optional[dict]=None):
+             namespace: Optional[str] = None,
+             options: Optional[dict]=None) -> None:
         """Load image sequence to the current camera."""
         repre_entity = context["representation"]
         version_entity = context["version"]
@@ -61,7 +62,7 @@ class LoadPlate(load.LoaderPlugin):
         tde4.setCameraName(camera, name)
         camera_name = tde4.getCameraName(camera)
 
-        self.log.debug(f"Loading: {file_path} into {camera_name}")
+        self.log.debug("Loading: %s {file_path} into %s{camera_name}")
 
         # set the path to sequence on the camera
         tde4.setCameraPath(camera, file_path)
@@ -83,7 +84,7 @@ class LoadPlate(load.LoaderPlugin):
         EqualizerHost.get_host().add_container(container)
         tde4.updateGUI()
 
-    def update(self, container: dict, context: dict):
+    def update(self, container: dict, context: dict) -> None:
         """Update the image sequence on the current camera."""
         version_entity = context["version"]
         version_attributes = version_entity["attrib"]
@@ -95,7 +96,8 @@ class LoadPlate(load.LoaderPlugin):
                 tde4.getCameraName(c) == container["namespace"]
             )
         except IndexError:
-            self.log.exception(f'Cannot find camera {container["namespace"]}')
+            self.log.exception(
+                "Cannot find camera %s", container["namespace"])
             return
 
         file_path = get_representation_path(repre_entity)
@@ -108,14 +110,16 @@ class LoadPlate(load.LoaderPlugin):
         tde4.setCameraSequenceAttr(
             camera, int(version_attributes.get("frameStart")),
             int(version_attributes.get("frameEnd")), 1)
-        self.log.info(f"Updating: {file_path} into {container['namespace']}")
+        self.log.info(
+            "Updating: %s into %s",
+            file_path, container["namespace"])
         container["representation"] = repre_entity["id"]
         container["version"] = str(version_entity["version"])
 
         EqualizerHost.get_host().add_container(container)
         tde4.updateGUI()
 
-    def switch(self, container: dict, context: dict):
+    def switch(self, container: dict, context: dict) -> None:
         """Switch the image sequence on the current camera."""
         self.update(container, context)
 

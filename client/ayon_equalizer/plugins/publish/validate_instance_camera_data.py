@@ -12,13 +12,14 @@ class ValidateInstanceCameraData(pyblish.api.InstancePlugin):
     """
 
     order = ValidateContentsOrder
-    hosts = ["equalizer"]
-    families = ["matchmove"]
+    hosts = ("equalizer")
+    families = ("matchmove")
     label = "Validate Instance has Camera data"
 
-    def process(self, instance: pyblish.api.Instance):
+    def process(self, instance: pyblish.api.Instance) -> None:
         """Process the validation."""
         try:
             _ = instance.data["cameras"]
         except KeyError as e:
-            raise PublishValidationError("No camera data found") from e
+            error_msg = "No camera data found"
+            raise PublishValidationError(error_msg) from e

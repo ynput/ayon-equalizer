@@ -11,7 +11,7 @@ import dataclasses
 import json
 import os
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import Optional, Union
 
 import pyblish.api
 import tde4
@@ -23,9 +23,7 @@ from ayon_core.pipeline import (
 from qtpy import QtCore, QtWidgets
 
 from ayon_equalizer import EQUALIZER_HOST_DIR
-
-if TYPE_CHECKING:
-    from ayon_equalizer.api.pipeline import Container
+from ayon_equalizer.api.pipeline import Container
 
 CONTEXT_REGEX = re.compile(
     r"AYON_CONTEXT::(?P<context>.*?)::AYON_CONTEXT_END",
@@ -40,12 +38,12 @@ INVENTORY_PATH = os.path.join(PLUGINS_DIR, "inventory")
 class DataclassJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder for dataclasses."""
 
-    def default(self, o: object):
+    def default(self, obj: object) -> Union[dict, object]:
         """Encode dataclasses as dict."""
-        if dataclasses.is_dataclass(o):
-            # type: o: dataclasses.dataclass
-            return dataclasses.asdict(o)
-        return super().default(o)
+        if dataclasses.is_dataclass(obj):
+            # type: obj: dataclasses.dataclass
+            return dataclasses.asdict(obj)
+        return super().default(obj)
 
 
 class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
@@ -68,7 +66,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         self._qapp = None
         super().__init__()
 
-    def workfile_has_unsaved_changes(self):
+    def workfile_has_unsaved_changes(self) -> bool:
         """Return the state of the current workfile.
 
         3DEqualizer returns state as 1 or zero, so we need to invert it.
@@ -79,11 +77,11 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         """
         return not bool(tde4.isProjectUpToDate())
 
-    def get_workfile_extensions(self):
+    def get_workfile_extensions(self) -> list[str]:
         """Return the workfile extensions for 3DEqualizer."""
         return [".3de"]
 
-    def save_workfile(self, dst_path: Optional[str]=None):
+    def save_workfile(self, dst_path: Optional[str]=None) -> str:
         """Save the current workfile.
 
         Arguments:
@@ -99,7 +97,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         return dst_path
 
-    def open_workfile(self, filepath: str):
+    def open_workfile(self, filepath: str) -> str:
         """Open a workfile in 3DEqualizer."""
         result = tde4.loadProject(filepath, True)  # noqa: FBT003
         if not bool(result):
@@ -108,22 +106,19 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         return filepath
 
-    def get_current_workfile(self):
+    def get_current_workfile(self) -> str:
         """Return the current workfile path."""
         return tde4.getProjectPath()
 
-    def get_containers(self):
+    def get_containers(self) ->list[Container]:
         """Get containers from the current workfile."""
         context = self.get_context_data()
         if context:
-            return context.get("containers", [])
+            for container in context.get("containers", []):
+                yield Container(**container)
         return []
 
-    def ls(self):
-        """List all the containers in the current workfile."""
-        return self.get_containers()
-
-    def add_container(self, container: Container):
+    def add_container(self, container: Container) -> None:
         """Add a container to the current workfile.
 
         Args:
@@ -135,8 +130,8 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         to_remove = [
             idx
             for idx, _container in enumerate(containers)
-            if _container["name"] == container.name
-            and _container["namespace"] == container.namespace
+            if _container.name == container.name
+            and _container.namespace == container.namespace
         ]
         for idx in reversed(to_remove):
             containers.pop(idx)
@@ -167,7 +162,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         return context
 
-    def update_context_data(self, data: dict, _changes: dict):
+    def update_context_data(self, data: dict, _changes: dict) -> None:
         """Update context data in the current workfile.
 
         Serialize context data as json and store it in the
@@ -206,7 +201,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         )
         tde4.updateGUI()
 
-    def install(self):
+    def install(self) -> None:
         """Install the host."""
         if not QtCore.QCoreApplication.instance():
             app = QtWidgets.QApplication([])
@@ -234,6 +229,6 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         """Get the host instance."""
         return cls._instance
 
-    def get_main_window(self):
+    def get_main_window(self) -> QtWidgets.QWidget:
         """Get the main window of the host application."""
         return self._qapp.activeWindow()

@@ -19,14 +19,13 @@ class EqualizerAddon(AYONAddon, IHostAddon):
     host_name = "equalizer"
     version = __version__
     heartbeat = 500
-    enabled = True
 
-    def initialize(self, settings: dict[str, Any]):
+    def initialize(self, settings: dict[str, Any]) -> None:
         """Initialize Equalizer Addon."""
         self.heartbeat = settings.get("heartbeat_interval", 500)
         self.enabled = True
 
-    def add_implementation_envs(self, env: dict, _app: str):
+    def add_implementation_envs(self, env: dict, _app: str) -> None:
         """Add 3DEqualizer specific environment variables.
 
         3DEqualizer utilize TDE4_ROOT for its root directory
@@ -48,10 +47,10 @@ class EqualizerAddon(AYONAddon, IHostAddon):
         env["PYTHON_CUSTOM_SCRIPTS_3DE4"] = startup_path
         env["AYON_TDE4_HEARTBEAT_INTERVAL"] = str(self.heartbeat)
 
-    def get_launch_hook_paths(self):
+    def get_launch_hook_paths(self) -> list[str]:
         """Get paths to launch hooks."""
         return [os.path.join(EQUALIZER_HOST_DIR, "hooks")]
 
-    def get_workfile_extensions(self):
+    def get_workfile_extensions(self) -> list[str]:
         """Get workfile extensions."""
         return [".3de"]

@@ -26,15 +26,15 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
     """
 
     label = "Extract Maya Script"
-    families = ["matchmove"]
-    hosts = ["equalizer"]
+    families = ("matchmove")
+    hosts = ("equalizer")
     optional = True
 
     order = pyblish.api.ExtractorOrder
 
     # intentionally ignoring complexity warning (PLR0915 and PLR0912) because
     # of the nature of the export scripts in 3DEqualizer.
-    def process(self, instance: pyblish.api.Instance):  # noqa: PLR0915, PLR0912
+    def process(self, instance: pyblish.api.Instance) -> None:  # noqa: C901,PLR0915,PLR0912
         """Extract Maya script from 3DEqualizer.
 
         This method is using export script shipped with 3DEqualizer to
@@ -51,7 +51,7 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
 
         # import maya export script from 3DEqualizer
         exporter_path = instance.context.data["tde4_path"] / "sys_data" / "py_scripts" / "export_maya.py"  # noqa: E501
-        self.log.debug(f"Importing {exporter_path.as_posix()}")
+        self.log.debug("Importing %s", exporter_path.as_posix())
         exporter = import_filepath(exporter_path.as_posix())
 
         # get camera point group
@@ -63,7 +63,8 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                 break
         else:
             # this should never happen as it should be handled by validator
-            raise RuntimeError("No camera point group found.")
+            error_msg = "No camera point group found."
+            raise KnownPublishError(error_msg)
 
         offset = tde4.getCameraFrameOffset(tde4.getCurrentCamera())
         overscan_width = attr_data["overscan_percent_width"] / 100.0
@@ -112,7 +113,7 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
 
             file_path = Path(staging_dir) / "maya_export"
             if instance.context.data.get("tde4_version"):
-                self.log.debug(f"Exporting to: {file_path.as_posix()}")
+                self.log.debug("Exporting to: %s", file_path.as_posix())
 
             # create representation data
             if "representations" not in instance.data:
@@ -162,7 +163,7 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                     1 if attr_data["point_sets"] else 0,
                     1 if attr_data["export_2p5d"] else 0)
                 if npoly_warning:
-                    self.log.warning(f"npoly warning: {npoly_warning}")
+                    self.log.warning("npoly warning: %s", npoly_warning)
                 representation = {
                     "name": "py",
                     "ext": "py",
@@ -175,5 +176,5 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
             err_msg = f"Export failed {status}"
             raise KnownPublishError(err_msg)
 
-        self.log.debug(f"output: {file_path.as_posix()}")
+        self.log.debug("output: %s", file_path.as_posix())
         instance.data["representations"].append(representation)

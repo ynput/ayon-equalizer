@@ -21,12 +21,12 @@ class ExtractLensDistortionNuke(publish.Extractor,
     """
 
     label = "Extract Lens Distortion Nuke node"
-    families = ["lensDistortion"]
-    hosts = ["equalizer"]
+    families = ("lensDistortion")
+    hosts = ("equalizer")
 
     order = pyblish.api.ExtractorOrder
 
-    def process(self, instance: pyblish.api.Instance):
+    def process(self, instance: pyblish.api.Instance) -> None:
         """Extract Nuke Lens Distortion script from 3DEqualizer."""
         if not self.is_active(instance.data):
             return
@@ -44,7 +44,7 @@ class ExtractLensDistortionNuke(publish.Extractor,
 
         # import export script from 3DEqualizer
         exporter_path = instance.context.data["tde4_path"] / "sys_data" / "py_scripts" / "export_nuke_LD_3DE4_Lens_Distortion_Node.py"  # noqa: E501
-        self.log.debug(f"Importing {exporter_path.as_posix()}")
+        self.log.debug("Importing %s", exporter_path.as_posix())
         exporter = import_filepath(exporter_path.as_posix())
         with patch("tde4.getWidgetValue", patched_getWidgetValue):
                 exporter.exportNukeDewarpNode(
@@ -60,7 +60,7 @@ class ExtractLensDistortionNuke(publish.Extractor,
             "files": file_path.name,
             "stagingDir": staging_dir,
         }
-        self.log.debug(f"output: {file_path.as_posix()}")
+        self.log.debug("output: %s", file_path.as_posix())
         instance.data["representations"].append(representation)
 
     @classmethod
