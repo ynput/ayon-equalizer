@@ -1,4 +1,4 @@
-"""Library functions for the Ayon Equalizer API."""
+"""Library functions for the AYON Equalizer API."""
 
 def maya_valid_name(name: str) -> str:
     """Make a given name Maya valid and return it.
