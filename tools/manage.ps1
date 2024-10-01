@@ -29,7 +29,7 @@ $CurrentDir = Get-Location
 $ScriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 $RepoRoot = (Get-Item $ScriptDir).parent.FullName
 & git submodule update --init --recursive
-$env:PSModulePath = $env:PSModulePath + ";$($ayon_root)\tools\modules\powershell"
+$env:PSModulePath = $env:PSModulePath + ";$($RepoRoot)\tools\modules\powershell"
 
 $FunctionName=$ARGS[0]
 $Arguments=@()
