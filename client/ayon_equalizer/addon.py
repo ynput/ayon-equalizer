@@ -27,7 +27,7 @@ class EqualizerAddon(AYONAddon, IHostAddon):
         self.heartbeat = settings.get("heartbeat_interval", 500)
         self.enabled = True
 
-    def add_implementation_envs(self, env: dict, _app: Any) -> None:
+    def add_implementation_envs(self, env: dict, _app: Any) -> None:  # noqa: ANN401
         """Add 3DEqualizer specific environment variables.
 
         3DEqualizer utilize TDE4_ROOT for its root directory
