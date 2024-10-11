@@ -56,7 +56,7 @@ class LoadPlate(load.LoaderPlugin):
         version_entity = context["version"]
         version_attributes = version_entity["attrib"]
 
-        file_path = self.filepath_from_context(repre_entity)
+        file_path = self.filepath_from_context(context)
         file_path = self.format_path(file_path, repre_entity)
 
         camera = tde4.createCamera("SEQUENCE")

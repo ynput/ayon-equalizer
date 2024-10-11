@@ -140,7 +140,7 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                 representation = {
                     "name": "matchmoveScript",
                     "ext": "mel",
-                    "files": file_path.name,
+                    "files": f"{file_path.name}.mel",
                     "stagingDir": staging_dir,
                 }
             elif instance.context.data["tde4_version"].major == EQUALIZER_8:

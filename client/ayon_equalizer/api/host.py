@@ -11,22 +11,26 @@ import dataclasses
 import json
 import os
 import re
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import pyblish.api
 import tde4
 from ayon_core.host import HostBase, ILoadHost, IPublishHost, IWorkfileHost
 from ayon_core.pipeline import (
+    CreatedInstance,
     register_creator_plugin_path,
     register_loader_plugin_path,
 )
 from qtpy import QtCore, QtWidgets
 
 from ayon_equalizer import EQUALIZER_HOST_DIR
-from ayon_equalizer.api.pipeline import Container
 
-CONTEXT_REGEX = re.compile(
-    r"AYON_CONTEXT::(?P<context>.*?)::AYON_CONTEXT_END",
+if TYPE_CHECKING:
+    from ayon_equalizer.api.pipeline import Container
+
+AYON_METADATA_GUARD = "AYON_CONTEXT::{}::AYON_CONTEXT_END"
+AYON_METADATA_REGEX = re.compile(
+    AYON_METADATA_GUARD.format("(?P<context>.*?)"),
     re.DOTALL)
 PLUGINS_DIR = os.path.join(EQUALIZER_HOST_DIR, "plugins")
 PUBLISH_PATH = os.path.join(PLUGINS_DIR, "publish")
@@ -34,8 +38,12 @@ LOAD_PATH = os.path.join(PLUGINS_DIR, "load")
 CREATE_PATH = os.path.join(PLUGINS_DIR, "create")
 INVENTORY_PATH = os.path.join(PLUGINS_DIR, "inventory")
 
+EQUALIZER_CONTEXT_KEY = "context"
+EQUALIZER_INSTANCES_KEY = "publish_instances"
+EQUALIZER_CONTAINERS_KEY = "containers"
 
-class DataclassJSONEncoder(json.JSONEncoder):
+
+class AYONJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder for dataclasses."""
 
     def default(self, obj: object) -> Union[dict, object]:
@@ -43,6 +51,8 @@ class DataclassJSONEncoder(json.JSONEncoder):
         if dataclasses.is_dataclass(obj):
             # type: obj: dataclasses.dataclass
             return dataclasses.asdict(obj)
+        if isinstance(obj, CreatedInstance):
+            return dict(obj)
         return super().default(obj)
 
 
@@ -110,12 +120,11 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         """Return the current workfile path."""
         return tde4.getProjectPath()
 
-    def get_containers(self) ->list[Container]:
+    def get_containers(self) -> list[Container]:
         """Get containers from the current workfile."""
-        context = self.get_context_data()
-        if context:
-            for container in context.get("containers", []):
-                yield Container(**container)
+        data = self.get_ayon_data()
+        if data:
+            yield from data.get(EQUALIZER_CONTAINERS_KEY, [])
         return []
 
     def add_container(self, container: Container) -> None:
@@ -125,7 +134,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
             container (Container): Container to add.
 
         """
-        context_data = self.get_context_data()
+        data = self.get_ayon_data()
         containers = self.get_containers()
         to_remove = [
             idx
@@ -136,12 +145,24 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         for idx in reversed(to_remove):
             containers.pop(idx)
 
-        context_data["containers"] = [*containers, container]
+        data[EQUALIZER_CONTAINERS_KEY] = [
+            *containers, dataclasses.asdict(container)]
 
-        self.update_context_data(context_data, {})
+        self.update_ayon_data(data)
 
-    def get_context_data(self) -> dict:
-        """Get context data from the current workfile.
+
+    def _create_ayon_data(self) -> None:
+        """Create AYON data in the current project."""
+        tde4.setProjectNotes(
+            f"{tde4.getProjectNotes()}\n"
+            f"{AYON_METADATA_GUARD}\n")
+        # this is really necessary otherwise the data is not saved
+        tde4.updateGUI()
+
+
+
+    def get_ayon_data(self) -> dict:
+        """Get AYON context data from the current project.
 
         3Dequalizer doesn't have any custom node or other
         place to store metadata, so we store context data in
@@ -153,21 +174,55 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         """
         # sourcery skip: use-named-expression
-        m = re.search(CONTEXT_REGEX, tde4.getProjectNotes())
+        m = re.search(AYON_METADATA_REGEX, tde4.getProjectNotes())
+        if not m:
+            self._create_ayon_data()
+            return {}
         try:
             context = json.loads(m["context"]) if m else {}
         except ValueError:
-            self.log.debug("context data is not valid json")
-            context = {}
+            self.log.debug("AYON data is not valid json")
+            # AYON data not found or invalid, create empty placeholder
+            self._create_ayon_data()
+            return {}
 
         return context
 
-    def update_context_data(self, data: dict, changes: dict) -> None:
-        """Update context data in the current workfile.
+    def update_ayon_data(self, data: dict) -> None:
+        """Update AYON context data in the current project.
 
         Serialize context data as json and store it in the
         project notes. If the context data is not found, create
         a placeholder there. See `get_context_data` for more info.
+
+        Args:
+            data (dict): Context data.
+
+        """
+        original_data = self.get_ayon_data()
+
+        updated_data = original_data.copy()
+        updated_data.update(data)
+        update_str = json.dumps(
+            updated_data or {}, indent=4, cls=AYONJSONEncoder)
+
+        tde4.setProjectNotes(
+            re.sub(
+                AYON_METADATA_REGEX,
+                AYON_METADATA_GUARD.format(update_str),
+                tde4.getProjectNotes(),
+            )
+        )
+        tde4.updateGUI()
+
+    def get_context_data(self) -> dict:
+        """Get context data from the current project."""
+        data = self.get_ayon_data()
+
+        return data.get(EQUALIZER_CONTEXT_KEY, {})
+
+    def update_context_data(self, data: dict, changes: dict) -> None:
+        """Update context data in the current project.
 
         Args:
             data (dict): Context data.
@@ -177,29 +232,82 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
             RuntimeError: If the context data is not found.
 
         """
-        notes = tde4.getProjectNotes()
-        m = re.search(CONTEXT_REGEX, notes)
-        if not m:
-            # context data not found, create empty placeholder
-            tde4.setProjectNotes(
-                f"{tde4.getProjectNotes()}\n"
-                f"AYON_CONTEXT::::AYON_CONTEXT_END\n")
+        if not data:
+            return
+        ayon_data = self.get_ayon_data()
+        if EQUALIZER_CONTEXT_KEY not in ayon_data:
+            ayon_data[EQUALIZER_CONTEXT_KEY] = []
 
-        original_data = self.get_context_data()
+        ayon_data[EQUALIZER_CONTEXT_KEY] = data
+        self.update_ayon_data(ayon_data)
 
-        updated_data = original_data.copy()
-        updated_data.update(data)
-        update_str = json.dumps(
-            updated_data or {}, indent=4, cls=DataclassJSONEncoder)
 
-        tde4.setProjectNotes(
-            re.sub(
-                CONTEXT_REGEX,
-                f"AYON_CONTEXT::{update_str}::AYON_CONTEXT_END",
-                tde4.getProjectNotes(),
-            )
-        )
-        tde4.updateGUI()
+    def get_publish_instances(self) -> list[dict]:
+        """Get publish instances from the current project."""
+        data = self.get_ayon_data()
+        return data.get(EQUALIZER_INSTANCES_KEY, [])
+
+    def add_publish_instance(self, instance_data: dict) -> None:
+        """Add a publish instance to the current project.
+
+        Args:
+            instance_data (dict): Publish instance to add.
+
+        """
+        data = self.get_ayon_data()
+        publish_instances = self.get_publish_instances()
+        publish_instances.append(instance_data)
+        data[EQUALIZER_INSTANCES_KEY] = publish_instances
+
+        self.update_ayon_data(data)
+
+    def update_publish_instance(
+            self,
+            instance: CreatedInstance,
+            data: dict,
+    ) -> None:
+        """Update a publish instance in the current project.
+
+        Args:
+            instance (CreatedInstance): Publish instance to update.
+            data (dict): Data to update.
+
+        """
+        ayon_data = self.get_ayon_data()
+        publish_instances = self.get_publish_instances()
+        for idx, publish_instance in enumerate(publish_instances):
+            if publish_instance["instance_id"] == instance.id:
+                publish_instances[idx] = data
+                break
+        ayon_data[EQUALIZER_INSTANCES_KEY] = publish_instances
+
+        self.update_ayon_data(ayon_data)
+
+    def write_publish_instances(
+            self, instances: list[dict]) -> None:
+        """Write publish instances to the current project."""
+        ayon_data = self.get_ayon_data()
+        ayon_data[EQUALIZER_INSTANCES_KEY] = instances
+        self.update_ayon_data(ayon_data)
+
+    def remove_publish_instance(self, instance: CreatedInstance) -> None:
+        """Remove a publish instance from the current project.
+
+        Args:
+            instance (dict): Publish instance to remove.
+
+        """
+        data = self.get_ayon_data()
+        publish_instances = self.get_publish_instances()
+        publish_instances = [
+            publish_instance
+            for publish_instance in publish_instances
+            if publish_instance["instance_id"] != instance.id
+        ]
+        data[EQUALIZER_INSTANCES_KEY] = publish_instances
+
+        self.update_ayon_data(data)
+
 
     def install(self) -> None:
         """Install the host."""

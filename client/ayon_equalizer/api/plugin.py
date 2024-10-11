@@ -7,12 +7,17 @@ Note:
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ayon_core.lib import BoolDef, EnumDef, NumberDef
 from ayon_core.pipeline import (
     CreatedInstance,
     Creator,
     OptionalPyblishPluginMixin,
 )
+
+if TYPE_CHECKING:
+    from .host import EqualizerHost
 
 
 class EqualizerCreator(Creator):
@@ -21,13 +26,13 @@ class EqualizerCreator(Creator):
     def create(self,
                product_name: str,
                instance_data: dict,
-               _pre_create_data: dict) -> CreatedInstance:
+               pre_create_data: dict) -> CreatedInstance:
         """Create a subset in the host application.
 
         Args:
             product_name (str): Name of the subset to create.
             instance_data (dict): Data of the instance to create.
-            _pre_create_data (dict): Data from the pre-create step.
+            pre_create_data (dict): Data from the pre-create step.
 
         Returns:
             ayon_core.pipeline.CreatedInstance: Created instance.
@@ -40,6 +45,10 @@ class EqualizerCreator(Creator):
             instance_data,
             self)
         self._add_instance_to_context(instance)
+
+        host: EqualizerHost = self.host
+        host.add_publish_instance(instance.data_to_store())
+
         return instance
 
     def collect_instances(self) -> None:
@@ -49,8 +58,10 @@ class EqualizerCreator(Creator):
             list[openpype.pipeline.CreatedInstance]: List of instances.
 
         """
-        for instance_data in self.host.get_context_data().get(
-                "publish_instances", []):
+        host: EqualizerHost = self.host
+        for instance_data in host.get_publish_instances():
+            if instance_data["creator_identifier"] != self.identifier:
+                continue
             created_instance = CreatedInstance.from_existing(
                 instance_data, self
             )
@@ -58,47 +69,32 @@ class EqualizerCreator(Creator):
 
     def update_instances(self, update_list: list[dict]) -> None:
         """Update instances in the host application."""
-        context = self.host.get_context_data()
-        if not context.get("publish_instances"):
-            context["publish_instances"] = []
+        host: EqualizerHost = self.host
 
-        instances_by_id = {}
-        for instance in context.get("publish_instances"):
-            # sourcery skip: use-named-expression
-            instance_id = instance.get("instance_id")
+        current_instances = host.get_publish_instances()
+        cur_instances_by_id = {}
+        for instance_data in current_instances:
+            instance_id = instance_data.get("instance_id")
             if instance_id:
-                instances_by_id[instance_id] = instance
+                cur_instances_by_id[instance_id] = instance_data
 
         for instance, changes in update_list:
-            new_instance_data = changes.new_value
-            instance_data = instances_by_id.get(instance.id)
-            # instance doesn't exist, append everything
-            if instance_data is None:
-                context["publish_instances"].append(new_instance_data)
+            instance_data = changes.new_value
+            cur_instance_data = cur_instances_by_id.get(instance.id)
+            if cur_instance_data is None:
+                current_instances.append(instance_data)
                 continue
+            for key in set(cur_instance_data) - set(instance_data):
+                cur_instance_data.pop(key)
+            cur_instance_data.update(instance_data)
+        host.write_publish_instances(current_instances)
 
-            # update only changed values on instance
-            for key in set(instance_data) - set(new_instance_data):
-                instance_data.pop(key)
-                instance_data.update(new_instance_data)
-
-        self.host.update_context_data(context, changes=update_list)
-
-    def remove_instances(self, instances: list[dict]) -> None:
+    def remove_instances(self, instances: list[CreatedInstance]) -> None:
         """Remove instances from the host application."""
-        context = self.host.get_context_data()
-        if not context.get("publish_instances"):
-            context["publish_instances"] = []
-
-        ids_to_remove = [
-            instance.get("instance_id")
-            for instance in instances
-        ]
-        for instance in context.get("publish_instances"):
-            if instance.get("instance_id") in ids_to_remove:
-                context["publish_instances"].remove(instance)
-
-        self.host.update_context_data(context, changes={})
+        host: EqualizerHost = self.host
+        for instance in instances:
+            self._remove_instance_from_context(instance)
+            host.remove_publish_instance(instance)
 
 
 class ExtractScriptBase(OptionalPyblishPluginMixin):

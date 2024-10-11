@@ -2,6 +2,8 @@
 
 Addon definition for 3DEqualizer host in AYON.
 """
+from __future__ import annotations
+
 import os
 from typing import Any
 
@@ -25,7 +27,7 @@ class EqualizerAddon(AYONAddon, IHostAddon):
         self.heartbeat = settings.get("heartbeat_interval", 500)
         self.enabled = True
 
-    def add_implementation_envs(self, env: dict, _app: str) -> None:
+    def add_implementation_envs(self, env: dict, _app: Any) -> None:
         """Add 3DEqualizer specific environment variables.
 
         3DEqualizer utilize TDE4_ROOT for its root directory
