@@ -74,6 +74,7 @@ class EqualizerCreator(Creator):
         current_instances = host.get_publish_instances()
         cur_instances_by_id = {}
         for instance_data in current_instances:
+            # sourcery skip: use-named-expression
             instance_id = instance_data.get("instance_id")
             if instance_id:
                 cur_instances_by_id[instance_id] = instance_data
@@ -87,14 +88,14 @@ class EqualizerCreator(Creator):
             for key in set(cur_instance_data) - set(instance_data):
                 cur_instance_data.pop(key)
             cur_instance_data.update(instance_data)
-        host.write_publish_instances(current_instances)
+        host.write_create_instances(current_instances)
 
     def remove_instances(self, instances: list[CreatedInstance]) -> None:
         """Remove instances from the host application."""
         host: EqualizerHost = self.host
         for instance in instances:
             self._remove_instance_from_context(instance)
-            host.remove_publish_instance(instance)
+            host.remove_create_instance(instance.id)
 
 
 class ExtractScriptBase(OptionalPyblishPluginMixin):

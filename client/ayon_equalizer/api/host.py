@@ -122,6 +122,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
     def get_containers(self) -> list[Container]:
         """Get containers from the current workfile."""
+        # sourcery skip: use-named-expression
         data = self.get_ayon_data()
         if data:
             yield from data.get(EQUALIZER_CONTAINERS_KEY, [])
@@ -150,7 +151,6 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         self.update_ayon_data(data)
 
-
     def _create_ayon_data(self) -> None:
         """Create AYON data in the current project."""
         tde4.setProjectNotes(
@@ -158,8 +158,6 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
             f"{AYON_METADATA_GUARD}\n")
         # this is really necessary otherwise the data is not saved
         tde4.updateGUI()
-
-
 
     def get_ayon_data(self) -> dict:
         """Get AYON context data from the current project.
@@ -235,9 +233,6 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         if not data:
             return
         ayon_data = self.get_ayon_data()
-        if EQUALIZER_CONTEXT_KEY not in ayon_data:
-            ayon_data[EQUALIZER_CONTEXT_KEY] = []
-
         ayon_data[EQUALIZER_CONTEXT_KEY] = data
         self.update_ayon_data(ayon_data)
 
@@ -263,38 +258,38 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
     def update_publish_instance(
             self,
-            instance: CreatedInstance,
+            instance_id: str,
             data: dict,
     ) -> None:
         """Update a publish instance in the current project.
 
         Args:
-            instance (CreatedInstance): Publish instance to update.
+            instance_id (str): Publish instance id to update.
             data (dict): Data to update.
 
         """
         ayon_data = self.get_ayon_data()
         publish_instances = self.get_publish_instances()
         for idx, publish_instance in enumerate(publish_instances):
-            if publish_instance["instance_id"] == instance.id:
+            if publish_instance["instance_id"] == instance_id:
                 publish_instances[idx] = data
                 break
         ayon_data[EQUALIZER_INSTANCES_KEY] = publish_instances
 
         self.update_ayon_data(ayon_data)
 
-    def write_publish_instances(
+    def write_create_instances(
             self, instances: list[dict]) -> None:
         """Write publish instances to the current project."""
         ayon_data = self.get_ayon_data()
         ayon_data[EQUALIZER_INSTANCES_KEY] = instances
         self.update_ayon_data(ayon_data)
 
-    def remove_publish_instance(self, instance: CreatedInstance) -> None:
+    def remove_create_instance(self, instance_id: str) -> None:
         """Remove a publish instance from the current project.
 
         Args:
-            instance (dict): Publish instance to remove.
+            instance_id (str): Publish instance id to remove.
 
         """
         data = self.get_ayon_data()
@@ -302,7 +297,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         publish_instances = [
             publish_instance
             for publish_instance in publish_instances
-            if publish_instance["instance_id"] != instance.id
+            if publish_instance["instance_id"] != instance_id
         ]
         data[EQUALIZER_INSTANCES_KEY] = publish_instances
 
