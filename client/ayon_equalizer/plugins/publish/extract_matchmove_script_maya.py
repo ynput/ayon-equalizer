@@ -138,7 +138,7 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                 )
 
                 representation = {
-                    "name": "matchmoveScript",
+                    "name": "mel",
                     "ext": "mel",
                     "files": f"{file_path.name}.mel",
                     "stagingDir": staging_dir,
