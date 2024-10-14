@@ -1,8 +1,7 @@
+"""Settings for the 3DEqualizer Addon."""
 from ayon_server.settings import BaseSettingsModel, SettingsField
 
-from .creator_plugins import (
-    EqualizerCreatorPlugins,
-)
+from .creator_plugins import EqualizerCreatorPlugins
 
 
 class EqualizerSettings(BaseSettingsModel):
@@ -20,4 +19,3 @@ class EqualizerSettings(BaseSettingsModel):
         default_factory=EqualizerCreatorPlugins,
         title="Creator plugins"
     )
-    

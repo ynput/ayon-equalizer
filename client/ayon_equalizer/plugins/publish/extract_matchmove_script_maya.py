@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-"""Extract project for Maya"""
+"""Extract project for Maya."""
 
 from pathlib import Path
+from typing import ClassVar
 
 import pyblish.api
 import tde4
-
-from ayon_equalizer.api import (
-    ExtractScriptBase,
-    maintained_model_selection,
-)
 from ayon_core.lib import import_filepath
 from ayon_core.pipeline import (
     KnownPublishError,
@@ -17,6 +12,11 @@ from ayon_core.pipeline import (
     publish,
 )
 
+from ayon_equalizer.api import ExtractScriptBase, maintained_model_selection
+from ayon_equalizer.api.lib import maya_valid_name
+
+EQUALIZER_7 = 7
+EQUALIZER_8 = 8
 
 class ExtractMatchmoveScriptMaya(publish.Extractor,
                                  ExtractScriptBase,
@@ -27,13 +27,16 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
     """
 
     label = "Extract Maya Script"
-    families = ["matchmove"]
-    hosts = ["equalizer"]
+    families: ClassVar[list] = ["matchmove"]
+    hosts: ClassVar[list] = ["equalizer"]
+    optional = True
 
     order = pyblish.api.ExtractorOrder
 
-    def process(self, instance: pyblish.api.Instance):
-        """Extracts Maya script from 3DEqualizer.
+    # intentionally ignoring complexity warning (PLR0915 and PLR0912) because
+    # of the nature of the export scripts in 3DEqualizer.
+    def process(self, instance: pyblish.api.Instance) -> None:  # noqa: C901,PLR0915,PLR0912
+        """Extract Maya script from 3DEqualizer.
 
         This method is using export script shipped with 3DEqualizer to
         maintain as much compatibility as possible. Instead of invoking it
@@ -48,8 +51,8 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
         attr_data = self.get_attr_values_from_data(instance.data)
 
         # import maya export script from 3DEqualizer
-        exporter_path = instance.data["tde4_path"] / "sys_data" / "py_scripts" / "export_maya.py"  # noqa: E501
-        self.log.debug(f"Importing {exporter_path.as_posix()}")
+        exporter_path = instance.context.data["tde4_path"] / "sys_data" / "py_scripts" / "export_maya.py"  # noqa: E501
+        self.log.debug("Importing %s", exporter_path.as_posix())
         exporter = import_filepath(exporter_path.as_posix())
 
         # get camera point group
@@ -61,7 +64,8 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                 break
         else:
             # this should never happen as it should be handled by validator
-            raise RuntimeError("No camera point group found.")
+            error_msg = "No camera point group found."
+            raise KnownPublishError(error_msg)
 
         offset = tde4.getCameraFrameOffset(tde4.getCurrentCamera())
         overscan_width = attr_data["overscan_percent_width"] / 100.0
@@ -87,10 +91,10 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
             # 1 - No models
             # 2 - Selected models
             # 3 - All models
-            if model_selection_enum == "__none__":
-                model_selection = 1
-            elif model_selection_enum == "__all__":
+            if model_selection_enum == "__all__":
                 model_selection = 3
+            elif model_selection_enum == "__none__":
+                model_selection = 1
             else:
                 # take model from instance and set its selection flag on
                 # turn off all others
@@ -103,36 +107,75 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                         tde4.set3DModelSelectionFlag(
                             point_group, instance.data["model_selection"], 1)
                         break
-                    else:
-                        # clear all other model selections
-                        for model in model_list:
-                            tde4.set3DModelSelectionFlag(point_group, model, 0)
 
-            file_path = Path(staging_dir) / "maya_export.mel"
-            status = exporter._maya_export_mel_file(
-                file_path.as_posix(),  # staging path
-                point_group,  # camera point group
-                [c["id"] for c in instance.data["cameras"] if c["enabled"]],
-                model_selection,  # model selection mode
-                overscan_width,
-                overscan_height,
-                1 if attr_data["export_uv_textures"] else 0,
-                scale_factor,
-                offset,  # start frame
-                1 if attr_data["hide_reference_frame"] else 0)
+                    # clear all other model selections
+                    for model in model_list:
+                        tde4.set3DModelSelectionFlag(point_group, model, 0)
+
+            file_path = Path(staging_dir) / "maya_export"
+            if instance.context.data.get("tde4_version"):
+                self.log.debug("Exporting to: %s", file_path.as_posix())
+
+            # create representation data
+            if "representations" not in instance.data:
+                instance.data["representations"] = []
+
+            if instance.context.data["tde4_version"].major == EQUALIZER_7:
+                status = exporter._maya_export_mel_file(  # noqa: SLF001
+                    f"{file_path.as_posix()}.mel",
+                    point_group,
+                    [
+                        c["id"] for c in instance.data["cameras"]
+                        if c["enabled"]
+                    ],
+                    model_selection,
+                    overscan_width,
+                    overscan_height,
+                    1 if attr_data["export_uv_textures"] else 0,
+                    scale_factor,
+                    offset,
+                    1 if attr_data["hide_reference_frame"] else 0,
+                )
+
+                representation = {
+                    "name": "mel",
+                    "ext": "mel",
+                    "files": f"{file_path.name}.mel",
+                    "stagingDir": staging_dir,
+                }
+            elif instance.context.data["tde4_version"].major == EQUALIZER_8:
+                exporter.script_version = "4.7"
+                status, npoly_warning = exporter._maya_export_python_file(  # noqa: SLF001
+                    file_path.as_posix(),  # staging path,
+                    point_group,  # camera point group,
+                    [
+                        c["id"] for c in instance.data["cameras"]
+                        if c["enabled"]
+                    ],
+                    model_selection,
+                    overscan_width,
+                    overscan_height,
+                    1 if attr_data["export_uv_textures"] else 0,
+                    scale_factor,
+                    offset,
+                    1 if attr_data["hide_reference_frame"] else 0,
+                    # scene_name
+                    maya_valid_name(f"{instance.data['name']}_GRP"),
+                    1 if attr_data["point_sets"] else 0,
+                    1 if attr_data["export_2p5d"] else 0)
+                if npoly_warning:
+                    self.log.warning("npoly warning: %s", npoly_warning)
+                representation = {
+                    "name": "py",
+                    "ext": "py",
+                    "files": f"{file_path.name}.py",
+                    "stagingDir": staging_dir,
+                }
 
         if status != 1:
-            raise KnownPublishError("Export failed.")
+            # for EM102
+            err_msg = f"Export failed {status}"
+            raise KnownPublishError(err_msg)
 
-        # create representation data
-        if "representations" not in instance.data:
-            instance.data["representations"] = []
-
-        representation = {
-            'name': "mel",
-            'ext': "mel",
-            'files': file_path.name,
-            "stagingDir": staging_dir,
-        }
-        self.log.debug(f"output: {file_path.as_posix()}")
+        self.log.debug("output: %s", file_path.as_posix())
         instance.data["representations"].append(representation)

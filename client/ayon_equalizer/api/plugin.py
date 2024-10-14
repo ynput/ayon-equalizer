@@ -1,13 +1,14 @@
 """Base plugin class for 3DEqualizer.
 
-note:
+Note:
     3dequalizer 7.1v2 uses Python 3.7.9
+    3dequalizer 8.0 uses Python 3.9
 
 """
-from abc import ABC
-from typing import Dict, List
+from __future__ import annotations
 
-from ayon_equalizer.api import EqualizerHost
+from typing import TYPE_CHECKING
+
 from ayon_core.lib import BoolDef, EnumDef, NumberDef
 from ayon_core.pipeline import (
     CreatedInstance,
@@ -15,93 +16,86 @@ from ayon_core.pipeline import (
     OptionalPyblishPluginMixin,
 )
 
+if TYPE_CHECKING:
+    from .host import EqualizerHost
 
-class EqualizerCreator(ABC, Creator):
 
-    @property
-    def host(self) -> EqualizerHost:
-        """Return the host application."""
-        # We need to cast the host to EqualizerHost, because the Creator
-        # class is not aware of the host application.
-        return super().host
+class EqualizerCreator(Creator):
+    """Base class for creating instances in 3DEqualizer."""
 
-    def create(self, subset_name, instance_data, pre_create_data):
+    def create(self,
+               product_name: str,
+               instance_data: dict,
+               pre_create_data: dict) -> CreatedInstance:
         """Create a subset in the host application.
 
         Args:
-            subset_name (str): Name of the subset to create.
+            product_name (str): Name of the subset to create.
             instance_data (dict): Data of the instance to create.
             pre_create_data (dict): Data from the pre-create step.
 
         Returns:
-            openpype.pipeline.CreatedInstance: Created instance.
+            ayon_core.pipeline.CreatedInstance: Created instance.
+
         """
         self.log.debug("EqualizerCreator.create")
         instance = CreatedInstance(
-            self.family,
-            subset_name,
+            self.product_type,
+            product_name,
             instance_data,
             self)
         self._add_instance_to_context(instance)
+
+        host: EqualizerHost = self.host
+        host.add_publish_instance(instance.data_to_store())
+
         return instance
 
-    def collect_instances(self):
+    def collect_instances(self) -> None:
         """Collect instances from the host application.
 
         Returns:
             list[openpype.pipeline.CreatedInstance]: List of instances.
+
         """
-        for instance_data in self.host.get_context_data().get(
-                "publish_instances", []):
+        host: EqualizerHost = self.host
+        for instance_data in host.get_publish_instances():
+            if instance_data["creator_identifier"] != self.identifier:
+                continue
             created_instance = CreatedInstance.from_existing(
                 instance_data, self
             )
             self._add_instance_to_context(created_instance)
 
-    def update_instances(self, update_list):
+    def update_instances(self, update_list: list[dict]) -> None:
+        """Update instances in the host application."""
+        host: EqualizerHost = self.host
 
-        # if not update_list:
-        #     return
-        context = self.host.get_context_data()
-        if not context.get("publish_instances"):
-            context["publish_instances"] = []
-
-        instances_by_id = {}
-        for instance in context.get("publish_instances"):
+        current_instances = host.get_publish_instances()
+        cur_instances_by_id = {}
+        for instance_data in current_instances:
             # sourcery skip: use-named-expression
-            instance_id = instance.get("instance_id")
+            instance_id = instance_data.get("instance_id")
             if instance_id:
-                instances_by_id[instance_id] = instance
+                cur_instances_by_id[instance_id] = instance_data
 
         for instance, changes in update_list:
-            new_instance_data = changes.new_value
-            instance_data = instances_by_id.get(instance.id)
-            # instance doesn't exist, append everything
-            if instance_data is None:
-                context["publish_instances"].append(new_instance_data)
+            instance_data = changes.new_value
+            cur_instance_data = cur_instances_by_id.get(instance.id)
+            if cur_instance_data is None:
+                current_instances.append(instance_data)
                 continue
+            for key in set(cur_instance_data) - set(instance_data):
+                cur_instance_data.pop(key)
+            cur_instance_data.update(instance_data)
+        host.write_create_instances(current_instances)
 
-            # update only changed values on instance
-            for key in set(instance_data) - set(new_instance_data):
-                instance_data.pop(key)
-                instance_data.update(new_instance_data)
-
-        self.host.update_context_data(context, changes=update_list)
-
-    def remove_instances(self, instances: List[Dict]):
-        context = self.host.get_context_data()
-        if not context.get("publish_instances"):
-            context["publish_instances"] = []
-
-        ids_to_remove = [
-            instance.get("instance_id")
-            for instance in instances
-        ]
-        for instance in context.get("publish_instances"):
-            if instance.get("instance_id") in ids_to_remove:
-                context["publish_instances"].remove(instance)
-
-        self.host.update_context_data(context, changes={})
+    def remove_instances(self, instances: list[CreatedInstance]) -> None:
+        """Remove instances from the host application."""
+        host: EqualizerHost = self.host
+        for instance in instances:
+            self._remove_instance_from_context(instance)
+            host.remove_create_instance(instance.id)
 
 
 class ExtractScriptBase(OptionalPyblishPluginMixin):
@@ -114,9 +108,12 @@ class ExtractScriptBase(OptionalPyblishPluginMixin):
     units = "mm"
 
     @classmethod
-    def apply_settings(cls, project_settings, system_settings):
+    def apply_settings(
+            cls, project_settings: dict,
+            system_settings: dict) -> None:  # noqa: ARG003
+        """Apply settings from the configuration."""
         settings = project_settings["equalizer"]["publish"][
-            "ExtractMatchmoveScriptMaya"]  # noqa
+            "ExtractMatchmoveScriptMaya"]
 
         cls.hide_reference_frame = settings.get(
             "hide_reference_frame", cls.hide_reference_frame)
@@ -129,8 +126,9 @@ class ExtractScriptBase(OptionalPyblishPluginMixin):
         cls.units = settings.get("units", cls.units)
 
     @classmethod
-    def get_attribute_defs(cls):
-        defs = super(ExtractScriptBase, cls).get_attribute_defs()
+    def get_attribute_defs(cls) -> list:
+        """Get attribute definitions for the plugin."""
+        defs = super().get_attribute_defs()
 
         defs.extend([
             BoolDef("hide_reference_frame",
@@ -155,5 +153,11 @@ class ExtractScriptBase(OptionalPyblishPluginMixin):
                     ["mm", "cm", "m", "in", "ft", "yd"],
                     default=cls.units,
                     label="Units"),
+            BoolDef("point_sets",
+                    label="Export Point Sets",
+                    default=True),
+            BoolDef("export_2p5d",
+                    label="Export 2.5D Points",
+                    default=True),
         ])
         return defs

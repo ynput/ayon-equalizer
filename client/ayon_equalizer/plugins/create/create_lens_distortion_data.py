@@ -1,11 +1,11 @@
+"""Create lens distortion data."""
 from ayon_equalizer.api import EqualizerCreator
 
 
 class CreateLensDistortionData(EqualizerCreator):
+    """Create lens distortion data."""
+
     identifier = "io.ayon.creators.equalizer.lens_distortion"
     label = "Lens Distortion"
-    family = "lensDistortion"
+    product_type = "lensDistortion"
     icon = "glasses"
-
-    def create(self, subset_name, instance_data, pre_create_data):
-        super().create(subset_name, instance_data, pre_create_data)

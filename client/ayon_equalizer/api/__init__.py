@@ -1,6 +1,7 @@
+"""API for the Equalizer plugin."""
 from .host import EqualizerHost
-from .plugin import EqualizerCreator, ExtractScriptBase
 from .pipeline import Container, maintained_model_selection
+from .plugin import EqualizerCreator, ExtractScriptBase
 
 __all__ = [
     "EqualizerHost",

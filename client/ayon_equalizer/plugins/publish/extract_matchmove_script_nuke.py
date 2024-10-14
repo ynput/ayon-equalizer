@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """Extract project for Nuke.
 
 Because original extractor script is intermingled with UI, we had to resort
@@ -11,14 +11,15 @@ TODO: This can be refactored even better, split to multiple methods, etc.
 
 """
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import patch
 
 import pyblish.api
-import tde4  # noqa: F401
+import tde4
+from ayon_core.pipeline import OptionalPyblishPluginMixin, publish
 
-
-from ayon_core.pipeline import OptionalPyblishPluginMixin
-from ayon_core.pipeline import publish
+# this is required because of the * import in extract_nuke script
+from vl_sdv import VL_APPLY_ZXY, mat3d, rot3d  # noqa: F401
 
 
 class ExtractMatchmoveScriptNuke(publish.Extractor,
@@ -34,13 +35,14 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
     """
 
     label = "Extract Nuke Script"
-    families = ["matchmove"]
-    hosts = ["equalizer"]
+    families: ClassVar[list] = ["matchmove"]
+    hosts: ClassVar[list] = ["equalizer"]
+    optional = True
 
     order = pyblish.api.ExtractorOrder
 
-    def process(self, instance: pyblish.api.Instance):
-
+    def process(self, instance: pyblish.api.Instance) -> None:
+        """Extract Nuke script from 3DEqualizer."""
         if not self.is_active(instance.data):
             return
 
@@ -52,45 +54,44 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
         file_path = Path(staging_dir) / "nuke_export.nk"
 
         # these patched methods are used to silence 3DEqualizer UI:
-        def patched_getWidgetValue(requester, key: str):  # noqa: N802
+        def patched_getWidgetValue(_, key: str) -> str:  # noqa: N802, ANN001
             """Return value for given key in widget."""
             if key == "file_browser":
                 return file_path.as_posix()
-            elif key == "startframe_field":
-                return tde4.getCameraFrameOffset(cam)
-            return ""
+            return tde4.getCameraFrameOffset(cam) \
+                if key == "startframe_field" else ""
 
         # This is simulating artist clicking on "OK" button
         # in the export dialog.
-        def patched_postCustomRequester(*args, **kwargs):  # noqa: N802
+        def patched_postCustomRequester(*args, **kwargs) -> int:  # noqa: N802, ANN002, ANN003, ARG001
             return 1
 
         # This is silencing success/error message after the script
         # is exported.
-        def patched_postQuestionRequester(*args, **kwargs):  # noqa: N802
+        def patched_postQuestionRequester(*args, **kwargs) -> None:  # noqa: N802, ANN002, ANN003, ARG001
             return None
 
         # import maya export script from 3DEqualizer
-        exporter_path = instance.data["tde4_path"] / "sys_data" / "py_scripts" / "export_nuke.py"  # noqa: E501
+        exporter_path = instance.context.data["tde4_path"] / "sys_data" / "py_scripts" / "export_nuke.py"  # noqa: E501
         self.log.debug("Patching 3dequalizer requester objects ...")
 
         with patch("tde4.getWidgetValue", patched_getWidgetValue), \
-             patch("tde4.postCustomRequester", patched_postCustomRequester), \
-             patch("tde4.postQuestionRequester", patched_postQuestionRequester):  # noqa: E501
+                 patch("tde4.postCustomRequester", patched_postCustomRequester), \
+                 patch("tde4.postQuestionRequester", patched_postQuestionRequester):  # noqa: E501
             with exporter_path.open() as f:
                 script = f.read()
-            self.log.debug(f"Importing {exporter_path.as_posix()}")
-            exec(script)
+            self.log.debug("Importing %s", exporter_path.as_posix())
+            exec(script)  # noqa: S102
 
         # create representation data
         if "representations" not in instance.data:
             instance.data["representations"] = []
 
         representation = {
-            'name': "nk",
-            'ext': "nk",
-            'files': file_path.name,
+            "name": "nk",
+            "ext": "nk",
+            "files": file_path.name,
             "stagingDir": staging_dir,
         }
-        self.log.debug(f"output: {file_path.as_posix()}")
+        self.log.debug("output: %s", file_path.as_posix())
         instance.data["representations"].append(representation)

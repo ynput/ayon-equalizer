@@ -1,31 +1,36 @@
-from attrs import field, define
-from ayon_core.pipeline import AVALON_CONTAINER_ID
+"""Pipeline API module."""
 import contextlib
+from dataclasses import dataclass
+
 import tde4
+from ayon_core.pipeline import AYON_CONTAINER_ID
 
 
-@define
-class Container(object):
+@dataclass
+class Container:
+    """Container data class."""
 
-    name: str = field(default=None)
-    id: str = field(init=False, default=AVALON_CONTAINER_ID)
-    namespace: str = field(default="")
-    loader: str = field(default=None)
-    representation: str = field(default=None)
+    name: str = None
+    id: str = AYON_CONTAINER_ID
+    namespace: str = ""
+    loader: str = None
+    representation: str = None
+    objectName: str = None  # noqa: N815
+    timestamp: int = 0
+    version: str = None
 
 
 @contextlib.contextmanager
-def maintained_model_selection():
+def maintained_model_selection() -> None:
     """Maintain model selection during context."""
-
     point_groups = tde4.getPGroupList()
     point_group = next(
         (
             pg for pg in point_groups
             if tde4.getPGroupType(pg) == "CAMERA"
-        ), None
+        ), None,
     )
-    selected_models = tde4.get3DModelList(point_group, 1)\
+    selected_models = tde4.get3DModelList(point_group, 1) \
         if point_group else []
     try:
         yield
