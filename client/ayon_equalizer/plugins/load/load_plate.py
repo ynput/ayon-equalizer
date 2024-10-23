@@ -69,9 +69,17 @@ class LoadPlate(load.LoaderPlugin):
         tde4.setCameraPath(camera, file_path)
 
         # set the sequence attributes star/end/step
-        tde4.setCameraSequenceAttr(
-            camera, int(version_attributes.get("frameStart")),
-            int(version_attributes.get("frameEnd")), 1)
+        start_frame = (int(version_attributes.get("frameStart")) -
+                       int(version_attributes.get("handleStart", 0)))
+        end_frame = (int(version_attributes.get("frameEnd")) +
+                     int(version_attributes.get("handleEnd", 0)))
+        tde4.setCameraSequenceAttr(camera, start_frame, end_frame, 1)
+
+        # set the camera offset to be the first frame of file sequence
+        tde4.setCameraFrameOffset(camera, start_frame)
+
+        # set frame rate
+        tde4.setCameraFPS(camera, float(version_attributes.get("fps", 0)))
 
         container = Container(
             name=name,
@@ -108,9 +116,18 @@ class LoadPlate(load.LoaderPlugin):
         tde4.setCameraPath(camera, file_path)
 
         # set the sequence attributes star/end/step
-        tde4.setCameraSequenceAttr(
-            camera, int(version_attributes.get("frameStart")),
-            int(version_attributes.get("frameEnd")), 1)
+        start_frame = (int(version_attributes.get("frameStart")) -
+                       int(version_attributes.get("handleStart", 0)))
+        end_frame = (int(version_attributes.get("frameEnd")) +
+                     int(version_attributes.get("handleEnd", 0)))
+        tde4.setCameraSequenceAttr(camera, start_frame, end_frame, 1)
+
+        # set the camera offset to be the first frame of file sequence
+        tde4.setCameraFrameOffset(camera, start_frame)
+
+        # set frame rate
+        tde4.setCameraFPS(camera, float(version_attributes.get("fps", 0)))
+
         self.log.info(
             "Updating: %s into %s",
             file_path, container["namespace"])
