@@ -1,4 +1,5 @@
 import os
+from typing import ClassVar
 
 from ayon_applications import LaunchTypes, PreLaunchHook
 
@@ -13,8 +14,8 @@ class AddLast3DEWorkfileToLaunchArgs(PreLaunchHook):
 
     # Execute after workfile template copy
     order = 10
-    app_groups = ("equalizer", "sdv_3dequalizer")
-    launch_types = LaunchTypes.local
+    app_groups: ClassVar[set[str]] = {"equalizer"}
+    launch_types: ClassVar[set[str]] = {LaunchTypes.local}
 
     def execute(self):
         if not self.data.get("start_last_workfile"):
