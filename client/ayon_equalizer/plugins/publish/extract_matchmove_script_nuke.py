@@ -47,8 +47,7 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
             return
 
         cam = tde4.getCurrentCamera()
-        frame0 = tde4.getCameraFrameOffset(cam)
-        frame0 -= 1
+        frame0 = tde4.getCameraFrameOffset(cam) - 1
 
         staging_dir = self.staging_dir(instance)
         file_path = Path(staging_dir) / "nuke_export.nk"
@@ -58,7 +57,7 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
             """Return value for given key in widget."""
             if key == "file_browser":
                 return file_path.as_posix()
-            return tde4.getCameraFrameOffset(cam) \
+            return tde4.getCameraFrameOffset(cam) - 1 \
                 if key == "startframe_field" else ""
 
         # This is simulating artist clicking on "OK" button
