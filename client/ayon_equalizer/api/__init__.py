@@ -4,9 +4,9 @@ from .pipeline import Container, maintained_model_selection
 from .plugin import EqualizerCreator, ExtractScriptBase
 
 __all__ = [
-    "EqualizerHost",
-    "EqualizerCreator",
     "Container",
+    "EqualizerCreator",
+    "EqualizerHost",
     "ExtractScriptBase",
     "maintained_model_selection",
 ]
