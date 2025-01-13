@@ -1,3 +1,4 @@
+"""Add last workfile path to launch arguments."""
 import os
 from typing import ClassVar
 
@@ -17,7 +18,8 @@ class AddLast3DEWorkfileToLaunchArgs(PreLaunchHook):
     app_groups: ClassVar[set[str]] = {"equalizer"}
     launch_types: ClassVar[set[str]] = {LaunchTypes.local}
 
-    def execute(self):
+    def execute(self) -> None:
+        """Execute the hook."""
         if not self.data.get("start_last_workfile"):
             self.log.info("It is set to not start last workfile on start.")
             return
