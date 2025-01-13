@@ -47,7 +47,6 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
             return
 
         cam = tde4.getCurrentCamera()
-        frame0 = tde4.getCameraFrameOffset(cam) - 1
 
         staging_dir = self.staging_dir(instance)
         file_path = Path(staging_dir) / "nuke_export.nk"
