@@ -67,7 +67,8 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
             error_msg = "No camera point group found."
             raise KnownPublishError(error_msg)
 
-        offset = tde4.getCameraFrameOffset(tde4.getCurrentCamera())
+        # Here we subtract 1 because 3DE is computing the offset with an offset
+        offset = tde4.getCameraFrameOffset(tde4.getCurrentCamera()) - 1
         overscan_width = attr_data["overscan_percent_width"] / 100.0
         overscan_height = attr_data["overscan_percent_height"] / 100.0
 
