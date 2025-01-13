@@ -33,7 +33,7 @@ class ExtractLensDistortionNuke(publish.Extractor,
             return
 
         cam = tde4.getCurrentCamera()
-        offset = tde4.getCameraFrameOffset(cam)
+        offset = tde4.getCameraFrameOffset(cam) - 1
         staging_dir = self.staging_dir(instance)
         file_path = Path(staging_dir) / "nuke_ld_export.nk"
         attr_data = self.get_attr_values_from_data(instance.data)
