@@ -162,3 +162,6 @@ Temporary Items
 
 # poetry
 .poetry/
+
+# ignore mkdocs build
+site/
