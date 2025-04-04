@@ -196,7 +196,7 @@ def remove_pychache_dirs(msg: str = "") -> None:
 def on_startup(
         command: Literal["build", "gh-deploy", "serve"], *,  # noqa: ARG001
         dirty: bool) -> None:  # noqa: ARG001
-    """On statup hook for MkDocs."""
+    """On startup hook for MkDocs."""
     remove_pychache_dirs(msg="HOOK    -  on_startup")
 
 
