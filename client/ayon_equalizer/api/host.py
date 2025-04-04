@@ -123,7 +123,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         """Return the current workfile path."""
         return tde4.getProjectPath()
 
-    def get_containers(self) -> Generator[Container, Any, list]:
+    def get_containers(self) -> Generator[Container, Any, Optional[list]]:
         """Get containers from the current workfile."""
         # sourcery skip: use-named-expression
         data = self.get_ayon_data() or {}
@@ -134,7 +134,6 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
             if _container.name and _container.namespace:
                 yield _container
 
-        return []
 
     def add_container(self, container: Container) -> None:
         """Add a container to the current workfile.
