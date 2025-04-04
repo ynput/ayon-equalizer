@@ -21,7 +21,7 @@ pytest = "^8.0"
 pytest-print = "^1.0"
 ayon-python-api = "^1.0"
 # linting dependencies
-ruff = "*"
+ruff = "^0.11"
 pre-commit = "^3.6.2"
 codespell = "^2.2.6"
 tomlkit = "^0.13.2"
