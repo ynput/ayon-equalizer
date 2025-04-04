@@ -27,7 +27,9 @@ from ayon_equalizer import EQUALIZER_HOST_DIR
 from ayon_equalizer.api.pipeline import Container
 
 if TYPE_CHECKING:
-    from typing import Any, Generator
+    from collections.abc import Generator
+    from typing import Any
+
 
 AYON_METADATA_GUARD = "AYON_CONTEXT::{}::AYON_CONTEXT_END"
 AYON_METADATA_REGEX = re.compile(
