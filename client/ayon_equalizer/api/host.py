@@ -24,9 +24,12 @@ from ayon_core.pipeline import (
 from qtpy import QtCore, QtWidgets
 
 from ayon_equalizer import EQUALIZER_HOST_DIR
+from ayon_equalizer.api.pipeline import Container
 
 if TYPE_CHECKING:
-    from ayon_equalizer.api.pipeline import Container
+    from collections.abc import Generator
+    from typing import Any
+
 
 AYON_METADATA_GUARD = "AYON_CONTEXT::{}::AYON_CONTEXT_END"
 AYON_METADATA_REGEX = re.compile(
@@ -120,13 +123,16 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         """Return the current workfile path."""
         return tde4.getProjectPath()
 
-    def get_containers(self) -> list[Container]:
+    def get_containers(self) -> Generator[Container, Any, Optional[list]]:
         """Get containers from the current workfile."""
         # sourcery skip: use-named-expression
-        data = self.get_ayon_data()
-        if data:
-            yield from data.get(EQUALIZER_CONTAINERS_KEY, [])
-        return []
+        data = self.get_ayon_data() or {}
+        for container in data.get(EQUALIZER_CONTAINERS_KEY, []):
+            # convert dict to dataclass
+            _container = Container(**container)
+            # check if the container is valid
+            if _container.name and _container.namespace:
+                yield _container
 
     def add_container(self, container: Container) -> None:
         """Add a container to the current workfile.
@@ -136,7 +142,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         """
         data = self.get_ayon_data()
-        containers = self.get_containers()
+        containers = list(self.get_containers())
         to_remove = [
             idx
             for idx, _container in enumerate(containers)
@@ -317,7 +323,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         register_loader_plugin_path(LOAD_PATH)
         register_creator_plugin_path(CREATE_PATH)
 
-        heartbeat_interval = os.getenv("AYON_TDE4_HEARTBEAT_INTERVAL") or 500
+        heartbeat_interval = os.getenv("AYON_TDE4_HEARTBEAT_INTERVAL") or 10
         tde4.setTimerCallbackFunction(
             "EqualizerHost._timer", int(heartbeat_interval))
 

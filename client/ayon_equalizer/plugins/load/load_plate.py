@@ -134,7 +134,7 @@ class LoadPlate(load.LoaderPlugin):
         container["representation"] = repre_entity["id"]
         container["version"] = str(version_entity["version"])
 
-        EqualizerHost.get_host().add_container(container)
+        EqualizerHost.get_host().add_container(Container(**container))
         tde4.updateGUI()
 
     def switch(self, container: dict, context: dict) -> None:
