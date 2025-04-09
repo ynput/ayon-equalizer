@@ -134,7 +134,6 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
             if _container.name and _container.namespace:
                 yield _container
 
-
     def add_container(self, container: Container) -> None:
         """Add a container to the current workfile.
 
