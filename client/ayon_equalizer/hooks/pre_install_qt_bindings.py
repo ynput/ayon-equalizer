@@ -206,7 +206,8 @@ class InstallQtBinding(PreLaunchHook):
             #   site-packages and make sure it is binary compatible
 
             process = subprocess.Popen(
-                args, stdout=subprocess.PIPE, universal_newlines=True
+                args, stdout=subprocess.PIPE, universal_newlines=True,
+                env=self.launch_context.env,
             )
             process.communicate()
 
@@ -222,8 +223,8 @@ class InstallQtBinding(PreLaunchHook):
         else:
             return process.returncode == 0
 
-    @staticmethod
-    def is_pyside_installed(python_executable: Path, pyside_name: str) -> bool:
+    def is_pyside_installed(
+            self, python_executable: Path, pyside_name: str) -> bool:
         """Check if PySide2/6 module is in 3de4 python env.
 
         Args:
@@ -237,7 +238,8 @@ class InstallQtBinding(PreLaunchHook):
         """
         # Get pip list from 3de4's python executable
         args = [python_executable.as_posix(), "-m", "pip", "list"]
-        process = subprocess.Popen(args, stdout=subprocess.PIPE)
+        process = subprocess.Popen(
+            args, stdout=subprocess.PIPE, env=self.launch_context.env)
         stdout, _ = process.communicate()
         lines = stdout.decode().split(os.linesep)
         # Second line contain dashes that define maximum length of module name.
