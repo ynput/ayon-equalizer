@@ -323,7 +323,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         register_loader_plugin_path(LOAD_PATH)
         register_creator_plugin_path(CREATE_PATH)
 
-        heartbeat_interval = os.getenv("AYON_TDE4_HEARTBEAT_INTERVAL") or 10
+        heartbeat_interval = os.getenv("AYON_TDE4_HEARTBEAT_INTERVAL") or 100
         tde4.setTimerCallbackFunction(
             "EqualizerHost._timer", int(heartbeat_interval))
 
