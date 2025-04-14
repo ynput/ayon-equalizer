@@ -20,11 +20,19 @@ class EqualizerAddon(AYONAddon, IHostAddon):
     name = "equalizer"
     host_name = "equalizer"
     version = __version__
-    heartbeat = 500
+    heartbeat = 100
 
     def initialize(self, settings: dict[str, Any]) -> None:
         """Initialize Equalizer Addon."""
-        self.heartbeat = settings.get("heartbeat_interval", 500)
+        try:
+            self.heartbeat = settings["equalizer"].get(
+                "heartbeat_interval", 100)
+        except KeyError as e:
+            msg = (
+                "3DEqualizer AYON addon settings not found. "
+                "Please check your configuration.")
+            raise RuntimeError(msg) from e
+
         self.enabled = True
 
     def add_implementation_envs(self, env: dict, _app: Any) -> None:  # noqa: ANN401
