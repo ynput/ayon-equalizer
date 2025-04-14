@@ -323,9 +323,16 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         register_loader_plugin_path(LOAD_PATH)
         register_creator_plugin_path(CREATE_PATH)
 
-        heartbeat_interval = os.getenv("AYON_TDE4_HEARTBEAT_INTERVAL") or 100
+        try:
+            heartbeat_interval = int(
+                os.getenv("AYON_TDE4_HEARTBEAT_INTERVAL")) or 100
+        except ValueError:
+            self.log.warning(
+                "AYON_TDE4_HEARTBEAT_INTERVAL is not a valid integer")
+            heartbeat_interval = 100
+
         tde4.setTimerCallbackFunction(
-            "EqualizerHost._timer", int(heartbeat_interval))
+            "EqualizerHost._timer", heartbeat_interval)
 
     @staticmethod
     def _timer() -> None:
