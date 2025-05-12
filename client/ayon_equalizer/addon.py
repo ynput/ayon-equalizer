@@ -24,22 +24,15 @@ class EqualizerAddon(AYONAddon, IHostAddon):
 
     def initialize(self, settings: dict[str, Any]) -> None:
         """Initialize Equalizer Addon."""
-        try:
-            self.heartbeat = settings["equalizer"].get(
-                "heartbeat_interval", 100)
-        except KeyError as e:
-            msg = (
-                "3DEqualizer AYON addon settings not found. "
-                "Please check your configuration.")
-            raise RuntimeError(msg) from e
-
+        self.heartbeat = settings["equalizer"].get(
+            "heartbeat_interval", 100)
         self.enabled = True
 
     def add_implementation_envs(self, env: dict, _app: Any) -> None:  # noqa: ANN401
         """Add 3DEqualizer specific environment variables.
 
-        3DEqualizer utilize TDE4_ROOT for its root directory
-        and PYTHON_CUSTOM_SCRIPTS_3DE4 as a colon separated list of
+        3DEqualizer utilizes TDE4_ROOT for its root directory
+        and PYTHON_CUSTOM_SCRIPTS_3DE4 as a colon-separated list of
         directories to look for additional python scripts.
         (Windows: list is separated by semicolons).
 
