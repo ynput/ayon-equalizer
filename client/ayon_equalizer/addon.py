@@ -24,8 +24,7 @@ class EqualizerAddon(AYONAddon, IHostAddon):
 
     def initialize(self, settings: dict[str, Any]) -> None:
         """Initialize Equalizer Addon."""
-        self.heartbeat = settings["equalizer"].get(
-            "heartbeat_interval", 100)
+        self.heartbeat = settings["equalizer"]["heartbeat_interval"]
         self.enabled = True
 
     def add_implementation_envs(self, env: dict, _app: Any) -> None:  # noqa: ANN401
