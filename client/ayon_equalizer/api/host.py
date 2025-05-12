@@ -326,7 +326,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         try:
             heartbeat_interval = int(
                 os.getenv("AYON_TDE4_HEARTBEAT_INTERVAL")) or 100
-        except ValueError:
+        except (ValueError, TypeError):
             self.log.warning(
                 "AYON_TDE4_HEARTBEAT_INTERVAL is not a valid integer")
             heartbeat_interval = 100
