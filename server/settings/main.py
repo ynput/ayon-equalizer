@@ -8,11 +8,12 @@ class EqualizerSettings(BaseSettingsModel):
     """3DEqualizer Addon Settings."""
 
     heartbeat_interval: int = SettingsField(
-        500, title="Heartbeat Interval",
+        100, title="Heartbeat Interval",
         description=(
             "The interval in milliseconds to pass"
-            "control to 3D Equalizer. Can affect"
-            "responsiveness of the application.")
+            "control to Qt UI. Value like 100 means it will be "
+            "passed every 10x per second. Recommended value is 100 - 50 "
+            "(20x per second).")
         )
 
     create: EqualizerCreatorPlugins = SettingsField(
