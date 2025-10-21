@@ -203,6 +203,30 @@ def find_files_in_subdir(
     return output
 
 
+def update_pyproject_version(logger: logging.Logger) -> None:
+    """Update version in pyproject.toml if it exists."""
+    pyproject_toml = os.path.join(CURRENT_ROOT, "pyproject.toml")
+    if not os.path.exists(pyproject_toml):
+        logger.info("Did not find pyproject.toml in root directory. Skipping")
+        return
+
+    line_idx = None
+    new_lines = []
+    with open(pyproject_toml, encoding="utf-8") as stream:
+        for idx, line in enumerate(stream.readlines()):
+            if line_idx is None and line.startswith("version"):
+                line_idx = idx
+            new_lines.append(line)
+
+    if line_idx is None:
+        logger.info("Failed to find version in pyproject.toml. Skipping.")
+        return
+
+    new_lines[line_idx] = f'version = "{ADDON_VERSION}"\n'
+    with open(pyproject_toml, "w", encoding="utf-8") as stream:
+        stream.write("".join(new_lines))
+
+
 def update_client_version(logger: logging.Logger) -> None:
     """Update version in client code if version.py is present."""
     if not ADDON_CLIENT_DIR:
@@ -419,6 +443,8 @@ def main(
 
     if not output_dir:
         output_dir = os.path.join(CURRENT_ROOT, "package")
+
+    update_pyproject_version(log)
 
     has_client_code = bool(ADDON_CLIENT_DIR)
     if has_client_code:
