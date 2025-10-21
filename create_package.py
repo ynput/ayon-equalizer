@@ -208,7 +208,7 @@ def update_pyproject_version(logger: logging.Logger) -> None:
     pyproject_toml = os.path.join(CURRENT_ROOT, "pyproject.toml")
     if not os.path.exists(pyproject_toml):
         logger.info("Did not find pyproject.toml in root directory. Skipping")
-        return None
+        return
 
     line_idx = None
     new_lines = []
@@ -220,7 +220,7 @@ def update_pyproject_version(logger: logging.Logger) -> None:
 
     if line_idx is None:
         logger.info("Failed to find version in pyproject.toml. Skipping.")
-        return None
+        return
 
     new_lines[line_idx] = f'version = "{ADDON_VERSION}"\n'
     with open(pyproject_toml, "w", encoding="utf-8") as stream:
