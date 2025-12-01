@@ -5,7 +5,7 @@
 
 [tool.poetry]
 name = "ayon-equalizer"
-version = "0.1.4"
+version = "0.1.4+dev"
 description = "3DEqualizer Addon for AYON"
 authors = ["Ynput Team <team@ynput.io>"]
 readme = "README.md"
