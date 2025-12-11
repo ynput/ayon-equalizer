@@ -8,4 +8,5 @@ class CreateLensDistortionData(EqualizerCreator):
     identifier = "io.ayon.creators.equalizer.lens_distortion"
     label = "Lens Distortion"
     product_type = "lensDistortion"
+    product_base_type = "lensDistortion"
     icon = "glasses"
