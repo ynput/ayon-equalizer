@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 class EqualizerCreator(Creator):
     """Base class for creating instances in 3DEqualizer."""
     skip_discovery = True
+    settings_category = "equalizer"
 
     def create(
         self,
