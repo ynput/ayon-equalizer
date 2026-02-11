@@ -10,8 +10,8 @@ class CreateMatchMove(EqualizerCreator):
 
     identifier = "io.ayon.creators.equalizer.matchmove"
     label = "Match Move"
-    product_type = "matchmove"
     product_base_type = "matchmove"
+    product_type = product_base_type
     icon = "camera"
 
     def get_instance_attr_defs(self) -> list:
