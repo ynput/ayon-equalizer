@@ -7,14 +7,9 @@ class CreateMatchMoveModel(BaseSettingsModel):
 
     enabled: bool = SettingsField(default=True, title="Enabled")
     default_variants: list[str] = SettingsField(
-        [
-            "CameraTrack",
-            "ObjectTrack",
-            "PointTrack",
-            "Stabilize",
-            "SurveyTrack",
-            "UserTrack",
-        ], title="Default Variants")
+        default_factory=list,
+        title="Default Variants"
+    )
 
 
 class EqualizerCreatorPlugins(BaseSettingsModel):
@@ -26,3 +21,15 @@ class EqualizerCreatorPlugins(BaseSettingsModel):
     )
 
 
+DEFAULT_EQUALIZER_CREATE_SETTINGS = {
+    "CreateMatchMove": {
+        "default_variants": [
+            "CameraTrack",
+            "ObjectTrack",
+            "PointTrack",
+            "Stabilize",
+            "SurveyTrack",
+            "UserTrack",
+        ],
+    }
+}
