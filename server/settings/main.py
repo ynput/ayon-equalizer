@@ -2,8 +2,8 @@
 from ayon_server.settings import BaseSettingsModel, SettingsField
 
 from .creator_plugins import (
-    EqualizerCreatorPlugins,
     DEFAULT_EQUALIZER_CREATE_SETTINGS,
+    EqualizerCreatorPlugins,
 )
 
 

@@ -1,7 +1,10 @@
 """3DEqualizer server addon."""
 from ayon_server.addons import BaseServerAddon
 
-from .settings import EqualizerSettings, DEFAULT_EQUALIZER_SETTINGS
+from .settings import (
+    DEFAULT_EQUALIZER_SETTINGS,
+    EqualizerSettings,
+)
 
 
 class EqualizerAddon(BaseServerAddon):
