@@ -24,10 +24,12 @@ class EqualizerCreator(Creator):
     """Base class for creating instances in 3DEqualizer."""
     skip_discovery = True
 
-    def create(self,
-               product_name: str,
-               instance_data: dict,
-               pre_create_data: dict) -> CreatedInstance:
+    def create(
+        self,
+        product_name: str,
+        instance_data: dict,
+        pre_create_data: dict,
+    ) -> CreatedInstance:
         """Create a subset in the host application.
 
         Args:
@@ -40,11 +42,16 @@ class EqualizerCreator(Creator):
 
         """
         self.log.debug("EqualizerCreator.create")
+        product_type = instance_data.get("productType")
+        if not product_type:
+            product_type = self.product_base_type
         instance = CreatedInstance(
-            self.product_type,
-            product_name,
-            instance_data,
-            self)
+            product_base_type=self.product_base_type,
+            product_type=product_type,
+            product_name=product_name,
+            data=instance_data,
+            creator=self,
+        )
         self._add_instance_to_context(instance)
 
         host: EqualizerHost = self.host
