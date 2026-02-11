@@ -54,10 +54,3 @@ class CreateMatchMove(EqualizerCreator):
                     label="Model(s) to publish",
                     tooltip="Select models to publish"),
         ]
-
-    def create(
-            self, product_name: str,
-            instance_data: dict, pre_create_data: dict) -> None:
-        """Create Match Move subset."""
-        self.log.debug("CreateMatchMove.create")
-        super().create(product_name, instance_data, pre_create_data)
