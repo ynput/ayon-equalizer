@@ -4,7 +4,6 @@ from .main import (
     EqualizerSettings,
 )
 
-
 __all__ = (
     "DEFAULT_EQUALIZER_SETTINGS",
     "EqualizerSettings",

@@ -3,6 +3,8 @@ from ayon_server.settings import BaseSettingsModel, SettingsField
 
 
 class ProductTypeItemModel(BaseSettingsModel):
+    """Product type item for creator plugins."""
+
     _layout = "compact"
     product_type: str = SettingsField(
         title="Product type",
@@ -33,6 +35,8 @@ class CreateMatchMoveModel(BaseSettingsModel):
 
 
 class CreateLensDistortionModel(BaseSettingsModel):
+    """Lens distortion creator settings."""
+
     product_type_items: list[ProductTypeItemModel] = SettingsField(
         default_factory=list,
         title="Product type items",
