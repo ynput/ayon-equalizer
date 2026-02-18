@@ -13,7 +13,7 @@ class EqualizerAddon(BaseServerAddon):
     name = "equalizer"
     title = "3DEqualizer"
 
-    settings_model: EqualizerSettings = EqualizerSettings()
+    settings_model: type[EqualizerSettings] = EqualizerSettings
 
     async def get_default_settings(self) -> EqualizerSettings:
         """Get default settings for the addon.
