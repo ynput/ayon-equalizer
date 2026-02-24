@@ -30,7 +30,7 @@ from ayon_equalizer.api import Container, EqualizerHost
 class LoadPlate(load.LoaderPlugin):
     """Load image sequence to the current camera."""
 
-    product_types: ClassVar[list[str]] = [
+    product_base_types: ClassVar[list[str]] = [
         "imagesequence",
         "review",
         "render",
@@ -38,6 +38,7 @@ class LoadPlate(load.LoaderPlugin):
         "image",
         "online",
     ]
+    product_types = product_base_types
 
     representations: ClassVar[list[str]] = ["*"]
     extensions: ClassVar[list[str]] = [

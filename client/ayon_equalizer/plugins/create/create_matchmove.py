@@ -10,8 +10,8 @@ class CreateMatchMove(EqualizerCreator):
 
     identifier = "io.ayon.creators.equalizer.matchmove"
     label = "Match Move"
-    product_type = "matchmove"
     product_base_type = "matchmove"
+    product_type = product_base_type
     icon = "camera"
 
     def get_instance_attr_defs(self) -> list:
@@ -54,10 +54,3 @@ class CreateMatchMove(EqualizerCreator):
                     label="Model(s) to publish",
                     tooltip="Select models to publish"),
         ]
-
-    def create(
-            self, product_name: str,
-            instance_data: dict, pre_create_data: dict) -> None:
-        """Create Match Move subset."""
-        self.log.debug("CreateMatchMove.create")
-        super().create(product_name, instance_data, pre_create_data)
