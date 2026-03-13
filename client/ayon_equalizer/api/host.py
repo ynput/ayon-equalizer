@@ -132,7 +132,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
             _container = Container(**container)
             # check if the container is valid
             if _container.name and _container.namespace:
-                yield _container
+                yield dataclasses.asdict(_container)
 
     def add_container(self, container: Container) -> None:
         """Add a container to the current workfile.
@@ -142,18 +142,19 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
 
         """
         data = self.get_ayon_data()
-        containers = list(self.get_containers())
-        to_remove = [
-            idx
-            for idx, _container in enumerate(containers)
-            if _container.name == container.name
-            and _container.namespace == container.namespace
-        ]
-        for idx in reversed(to_remove):
-            containers.pop(idx)
 
+        containers = [
+            _container for _container in self.get_containers()
+            # Remove existing container with the same name and namespace to
+            # avoid duplicates.
+            if not (
+                container.name == _container["name"]
+                and container.namespace == _container["namespace"]
+            )
+        ]
         data[EQUALIZER_CONTAINERS_KEY] = [
-            *containers, dataclasses.asdict(container)]
+            *containers, dataclasses.asdict(container)
+        ]
 
         self.update_ayon_data(data)
 
