@@ -8,7 +8,7 @@ import tde4
 class CollectWorkfile(pyblish.api.ContextPlugin):
     """Collect camera data from the scene."""
 
-    order = pyblish.api.CollectorOrder
+    order = pyblish.api.CollectorOrder - 0.5
     hosts: ClassVar[list] = ["equalizer"]
     label = "Collect Workfile"
 
