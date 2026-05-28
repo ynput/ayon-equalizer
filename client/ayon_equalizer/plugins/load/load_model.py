@@ -54,6 +54,13 @@ class LoadModel(load.LoaderPlugin):
 
         model_id = tde4.create3DModel(point_group_id)
         tde4.set3DModelName(point_group_id, model_id, name)
+        # hardcoded for now until putting orientation and spatial unit
+        # data against a published model
+        tde4.set3DModelRotationScale3D(
+            point_group_id,
+            model_id,
+            [[[100.0, 0.0, 0.0], [0.0, 0.0, -100.0], [0.0, 100.0, 0.0]]],
+        )
         tde4.set3DModelSurveyFlag(point_group_id, model_id, 1)
         tde4.importOBJ3DModel(point_group_id, model_id, file_path)
 
