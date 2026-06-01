@@ -1,4 +1,6 @@
 """Add last workfile path to launch arguments."""
+from __future__ import annotations
+
 import os
 from typing import ClassVar
 
@@ -20,18 +22,26 @@ class AddLast3DEWorkfileToLaunchArgs(PreLaunchHook):
 
     def execute(self) -> None:
         """Execute the hook."""
+        workfile_path = self.get_workfile_path()
+        # Add path to workfile to arguments
+        if workfile_path:
+            self.launch_context.launch_args.extend(["-open", workfile_path])
+
+    def get_workfile_path(self) -> str | None:
+        workfile_path = self.data.get("workfile_path")
+        if workfile_path:
+            return workfile_path
+
         if not self.data.get("start_last_workfile"):
             self.log.info("It is set to not start last workfile on start.")
-            return
+            return None
 
         last_workfile = self.data.get("last_workfile_path")
         if not last_workfile:
             self.log.warning("Last workfile was not collected.")
-            return
+            return None
 
         if not os.path.exists(last_workfile):
             self.log.info("Current context does not have any workfile yet.")
-            return
-
-        # Add path to workfile to arguments
-        self.launch_context.launch_args.extend(["-open", last_workfile])
+            return None
+        return last_workfile
