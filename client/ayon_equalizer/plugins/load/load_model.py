@@ -53,7 +53,6 @@ class LoadModel(load.LoaderPlugin):
         file_path = self.filepath_from_context(context)
 
         model_id = tde4.create3DModel(point_group_id)
-        tde4.set3DModelSurveyFlag(point_group_id, model_id, 1)
         tde4.set3DModelName(point_group_id, model_id, name)
         tde4.importOBJ3DModel(point_group_id, model_id, file_path)
         # hardcoded for now until putting orientation and spatial unit
