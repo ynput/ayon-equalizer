@@ -28,6 +28,12 @@ class AddLast3DEWorkfileToLaunchArgs(PreLaunchHook):
             self.launch_context.launch_args.extend(["-open", workfile_path])
 
     def get_workfile_path(self) -> str | None:
+        """Get path to workfile on launch.
+
+        Returns:
+            str | None: Path to workfile on launch.
+
+        """
         workfile_path = self.data.get("workfile_path")
         if workfile_path:
             return workfile_path
