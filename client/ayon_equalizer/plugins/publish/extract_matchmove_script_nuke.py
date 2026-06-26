@@ -79,7 +79,7 @@ class ExtractMatchmoveScriptNuke(publish.Extractor,
             with exporter_path.open() as f:
                 script = f.read()
             self.log.debug("Importing %s", exporter_path.as_posix())
-            exec(script)  # noqa: S102
+            exec(script, {"tde4": tde4})  # noqa: S102
 
         # create representation data
         if "representations" not in instance.data:
