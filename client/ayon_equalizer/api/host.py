@@ -94,7 +94,7 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         """Return the workfile extensions for 3DEqualizer."""
         return [".3de"]
 
-    def save_workfile(self, dst_path: Optional[str]=None) -> str:
+    def save_workfile(self, dst_path: Optional[str] = None) -> str:
         """Save the current workfile.
 
         Arguments:
@@ -243,7 +243,6 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         ayon_data[EQUALIZER_CONTEXT_KEY] = data
         self.update_ayon_data(ayon_data)
 
-
     def get_publish_instances(self) -> list[dict]:
         """Get publish instances from the current project."""
         data = self.get_ayon_data()
@@ -309,7 +308,6 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         data[EQUALIZER_INSTANCES_KEY] = publish_instances
 
         self.update_ayon_data(data)
-
 
     def install(self) -> None:
         """Install the host."""

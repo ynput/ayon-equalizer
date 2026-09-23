@@ -22,6 +22,7 @@ from ayon_applications import LaunchTypes, PreLaunchHook
 python_versions = {7, 8, 9, 10, 11, 12, 13}
 MAX_PYSIDE2_PYTHON_VERSION = 10
 
+
 class InstallQtBinding(PreLaunchHook):
     """Install Qt binding to 3dequalizer's python packages."""
 
@@ -116,7 +117,6 @@ class InstallQtBinding(PreLaunchHook):
         pyside_name = "PySide6"
         if py_version <= MAX_PYSIDE2_PYTHON_VERSION:
             pyside_name = "PySide2"
-
 
         # Check if PySide2 is installed and skip if yes
         if self.is_pyside_installed(python_executable, pyside_name):
