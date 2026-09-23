@@ -20,7 +20,7 @@ class ValidateCameraPoingroup(pyblish.api.InstancePlugin):
     families: ClassVar[list] = ["matchmove"]
     label = "Validate Camera Point Group"
 
-    def process(self, _: pyblish.api.Instance) -> None:
+    def process(self, instance: pyblish.api.Instance) -> None:
         """Process the validation."""
         valid = any(
             tde4.getPGroupType(point_group) == "CAMERA"
