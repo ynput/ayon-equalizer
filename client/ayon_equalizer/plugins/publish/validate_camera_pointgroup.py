@@ -9,7 +9,7 @@ from ayon_core.pipeline.publish import (
 )
 
 
-class ValidateCameraPoingroup(pyblish.api.InstancePlugin):
+class ValidateCameraPointGroup(pyblish.api.InstancePlugin):
     """Validate Camera Point Group.
 
     There must be a camera point group in the scene.
