@@ -114,7 +114,7 @@ class ExtractMatchmoveScriptHoudini(
             overscan_height=overscan_height,
         )
         representation = {
-            "name": "py",
+            "name": "py_houdini",
             "ext": "py",
             "files": f"{file_path.name}.py",
             "stagingDir": staging_dir,
