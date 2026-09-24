@@ -287,7 +287,7 @@ function Resolve-Function {
         Invoke-CodeSpell
     } elseif ($FunctionName -eq "run") {
         Set-Cwd
-        & uv run python start.py @arguments
+        & uv run @arguments
     } elseif ($FunctionName -eq "runtests") {
         Set-Cwd
         Start-Tests
