@@ -261,6 +261,8 @@ function Write-Help {
     Write-Info -Text "  ruff-check                    ", "Run Ruff check for the repository" -Color White, Cyan
     Write-Info -Text "  ruff-fix                      ", "Run Ruff fix for the repository" -Color White, Cyan
     Write-Info -Text "  codespell                     ", "Run codespell check for the repository" -Color White, Cyan
+    Write-Info -Text "  run                           ", "Run a command in the virtual environment" -Color White, Cyan
+    Write-Info -Text "  run-tests                     ", "Run tests in the virtual environment" -Color White, Cyan
     Write-Info -Text "  build-docs                    ", "Build documentation" -Color White, Cyan
     Write-Info -Text "  serve-docs                    ", "Serve documentation locally" -Color White, Cyan
     Write-Info -Text "  clear-cache                   ", "Clear Python cache" -Color White, Cyan
