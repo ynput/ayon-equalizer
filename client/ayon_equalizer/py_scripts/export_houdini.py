@@ -7,7 +7,7 @@ instpath = tde4.get3DEInstallPath()
 if "%s/sys_data/py_vl_sdv" % instpath not in sys.path:
     sys.path.append("%s/sys_data/py_vl_sdv" % instpath)
 
-from vl_sdv import VL_APPLY_ZXY, mat3d, rot3d  # ruff: ignore[module-import-not-at-top-of-file]
+from vl_sdv import VL_APPLY_ZXY, mat3d, rot3d  # noqa: E402
 
 
 def convertToAngles(r3d, yup):
