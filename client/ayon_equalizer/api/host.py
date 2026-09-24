@@ -16,11 +16,8 @@ from typing import TYPE_CHECKING, Optional, Union
 import pyblish.api
 import tde4
 from ayon_core.host import HostBase, ILoadHost, IPublishHost, IWorkfileHost
-from ayon_core.pipeline import (
-    CreatedInstance,
-    register_creator_plugin_path,
-    register_loader_plugin_path,
-)
+from ayon_core.pipeline import CreatedInstance
+
 from qtpy import QtCore, QtWidgets
 
 from ayon_equalizer import EQUALIZER_HOST_DIR
@@ -319,8 +316,6 @@ class EqualizerHost(HostBase, IWorkfileHost, ILoadHost, IPublishHost):
         pyblish.api.register_host("equalizer")
 
         pyblish.api.register_plugin_path(PUBLISH_PATH)
-        register_loader_plugin_path(LOAD_PATH)
-        register_creator_plugin_path(CREATE_PATH)
 
         try:
             heartbeat_interval = int(
