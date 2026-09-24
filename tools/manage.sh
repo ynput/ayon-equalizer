@@ -221,11 +221,13 @@ main () {
       exit $return_code
       ;;
     "run")
-      run_command "$@" || return_code=$?
+      shift
+      uv run "$@" || return_code=$?
       exit $return_code
       ;;
     "runtests")
-      run_tests "$@" || return_code=$?
+      shift
+      uv run pytest "$@" || return_code=$?
       exit $return_code
       ;;
     "builddocs")
