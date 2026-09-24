@@ -116,6 +116,10 @@ create_env () {
   pushd "$repo_root" > /dev/null || return > /dev/null
 
 
+  if ! command -v uv >/dev/null 2>&1; then
+    install_uv || { echo -e "${BIRed}!!!${RST} uv installation failed"; return 1; }
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
   uv venv && uv sync || { echo -e "${BIRed}!!!${RST} Venv installation failed"; return 1; }
   if [ $? -ne 0 ] ; then
     echo -e "${BIRed}!!!${RST} Virtual environment creation failed."
