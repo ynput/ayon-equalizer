@@ -158,7 +158,7 @@ run_codespell () {
 
 build_docs () {
   echo -e "${BIGreen}>>>${RST} Building documentation ..."
-  uv run mkdocs build
+  uv run --group docs mkdocs build
 }
 
 serve_docs () {
