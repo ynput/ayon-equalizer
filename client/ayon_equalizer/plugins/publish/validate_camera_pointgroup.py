@@ -9,7 +9,7 @@ from ayon_core.pipeline.publish import (
 )
 
 
-class ValidateCameraPoingroup(pyblish.api.InstancePlugin):
+class ValidateCameraPointGroup(pyblish.api.InstancePlugin):
     """Validate Camera Point Group.
 
     There must be a camera point group in the scene.
@@ -20,7 +20,7 @@ class ValidateCameraPoingroup(pyblish.api.InstancePlugin):
     families: ClassVar[list] = ["matchmove"]
     label = "Validate Camera Point Group"
 
-    def process(self, _: pyblish.api.Instance) -> None:
+    def process(self, instance: pyblish.api.Instance) -> None:
         """Process the validation."""
         valid = any(
             tde4.getPGroupType(point_group) == "CAMERA"
