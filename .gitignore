@@ -160,7 +160,8 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-# poetry
+# uv
+.venv/
 .poetry/
 
 # ignore mkdocs build
