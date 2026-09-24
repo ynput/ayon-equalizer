@@ -36,36 +36,6 @@ BIWhite='\033[1;97m'      # White
 
 
 ##############################################################################
-# Detect required version of python
-# Globals:
-#   colors
-#   PYTHON
-# Arguments:
-#   None
-# Returns:
-#   None
-###############################################################################
-detect_python () {
-  echo -e "${BIGreen}>>>${RST} Using python \c"
-  command -v python >/dev/null 2>&1 || { echo -e "${BIRed}- NOT FOUND${RST} ${BIYellow}You need Python 3.11 installed to continue.${RST}"; return 1; }
-  local version_command="import sys;print('{0}.{1}'.format(sys.version_info[0], sys.version_info[1]))"
-  local python_version="$(python <<< ${version_command})"
-  oIFS="$IFS"
-  IFS=.
-  set -- $python_version
-  IFS="$oIFS"
-  if [ "$1" -ge "3" ] && [ "$2" -ge "11" ] ; then
-    if [ "$2" -gt "11" ] ; then
-      echo -e "${BIWhite}[${RST} ${BIRed}$1.$2 ${BIWhite}]${RST} - ${BIRed}FAILED${RST} ${BIYellow}Version is new and unsupported, use${RST} ${BIPurple}3.11.x${RST}"; return 1;
-    else
-      echo -e "${BIWhite}[${RST} ${BIGreen}$1.$2${RST} ${BIWhite}]${RST}"
-    fi
-  else
-    command -v python >/dev/null 2>&1 || { echo -e "${BIRed}$1.$2$ - ${BIRed}FAILED${RST} ${BIYellow}Version is old and unsupported${RST}"; return 1; }
-  fi
-}
-
-##############################################################################
 # Clean pyc files in specified directory
 # Globals:
 #   None
@@ -197,8 +167,6 @@ serve_docs () {
 }
 
 main () {
-  detect_python || return 1
-
   # Directories
   repo_root=$(realpath $(dirname $(dirname "${BASH_SOURCE[0]}")))
 
