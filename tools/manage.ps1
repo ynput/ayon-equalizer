@@ -172,6 +172,8 @@ function Deploy-UvEnv {
         {
             Write-Info -Text "NOT FOUND" -Color Yellow
             Install-Uv
+            if ($LASTEXITCODE -ne 0) { Exit-WithCode 1 }
+            $env:PATH = "$( $env:USERPROFILE )\.local\bin;$env:PATH"
             Write-Info -Text "INSTALLED" -Color Cyan
         }
     }
