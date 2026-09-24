@@ -199,7 +199,7 @@ main () {
       ;;
     "runtests")
       shift
-      uv run pytest "$@" || return_code=$?
+      uv run --group tests pytest "$@" || return_code=$?
       exit $return_code
       ;;
     "builddocs")
