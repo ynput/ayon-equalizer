@@ -236,7 +236,7 @@ function Clear-Cache {
 
 function Build-Docs {
     Clear-Cache
-    $RunArgs = @( "run", "mkdocs", "build")
+    $RunArgs = @( "run", "--group", "docs", "mkdocs", "build")
 
     & uv $RunArgs @arguments
 }
