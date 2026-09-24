@@ -189,7 +189,11 @@ function Deploy-UvEnv {
     Restore-Cwd
     try
     {
-        New-BurntToastNotification -AppLogo "$app_logo" -Text "AYON", "Virtual environment created.", "All done in $( $endTime - $startTime ) secs."
+        if (Test-CommandExists "New-BurntToastNotification")
+        {
+            $app_logo = "$repo_root\tools\icons\ayon.ico"
+            New-BurntToastNotification -AppLogo "$app_logo" -Text "AYON", "Virtual environment created.", "All done in $( $endTime - $startTime ) secs."
+        }
     } catch {}
     Write-Info -Text ">>> ", "Virtual environment created." -Color Green, White
 }
