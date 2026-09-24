@@ -51,7 +51,7 @@ class LoadPlate(load.LoaderPlugin):
 
     def load(self, context: dict, name: Optional[str] = None,
              namespace: Optional[str] = None,
-             options: Optional[dict]=None) -> None:
+             options: Optional[dict] = None) -> None:
         """Load image sequence to the current camera."""
         repre_entity = context["representation"]
         version_entity = context["version"]
@@ -165,4 +165,3 @@ class LoadPlate(load.LoaderPlugin):
 
         filename = os.path.normpath(filename)
         return filename.replace("\\", "/")
-

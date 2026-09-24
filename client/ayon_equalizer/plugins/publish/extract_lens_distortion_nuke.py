@@ -48,8 +48,7 @@ class ExtractLensDistortionNuke(publish.Extractor,
         self.log.debug("Importing %s", exporter_path.as_posix())
         exporter = import_filepath(exporter_path.as_posix())
         with patch("tde4.getWidgetValue", patched_getWidgetValue):
-                exporter.exportNukeDewarpNode(
-                    cam, offset, file_path.as_posix())
+            exporter.exportNukeDewarpNode(cam, offset, file_path.as_posix())
 
         # create representation data
         if "representations" not in instance.data:

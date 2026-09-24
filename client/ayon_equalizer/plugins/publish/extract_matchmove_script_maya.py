@@ -18,6 +18,7 @@ from ayon_equalizer.api.lib import maya_valid_name
 EQUALIZER_7 = 7
 EQUALIZER_8 = 8
 
+
 class ExtractMatchmoveScriptMaya(publish.Extractor,
                                  ExtractScriptBase,
                                  OptionalPyblishPluginMixin):
