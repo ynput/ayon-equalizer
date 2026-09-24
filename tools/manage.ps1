@@ -183,8 +183,11 @@ function Deploy-UvEnv {
     # so you can safely use pyenv to manage python versions
     Write-Info -Text ">>> ", "Creating and activating venv ... " -Color Green, Gray
     uv venv --allow-existing .venv
+    if ($LASTEXITCODE -ne 0) { Exit-WithCode 1 }
     & uv sync
+    if ($LASTEXITCODE -ne 0) { Exit-WithCode 1 }
     & uv run pre-commit install
+    if ($LASTEXITCODE -ne 0) { Exit-WithCode 1 }
     $endTime = [int][double]::Parse((Get-Date -UFormat %s))
     Restore-Cwd
     try
