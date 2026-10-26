@@ -41,10 +41,11 @@ class EqualizerAddon(AYONAddon, IHostAddon):
 
         """
         startup_path = os.path.join(EQUALIZER_HOST_DIR, "startup")
-        if "PYTHON_CUSTOM_SCRIPTS_3DE4" in env:
-            startup_path = os.path.join(
-                env["PYTHON_CUSTOM_SCRIPTS_3DE4"],
-                startup_path)
+        custom_scripts_path = env.get("PYTHON_CUSTOM_SCRIPTS_3DE4")
+        if custom_scripts_path:
+            startup_path = os.pathsep.join(
+                (custom_scripts_path, startup_path)
+            )
 
         env["PYTHON_CUSTOM_SCRIPTS_3DE4"] = startup_path
         env["AYON_TDE4_HEARTBEAT_INTERVAL"] = str(self.heartbeat)
