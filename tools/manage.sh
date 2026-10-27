@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Colors for terminal
 
 RST='\033[0m'             # Text Reset
@@ -34,40 +36,27 @@ BIWhite='\033[1;97m'      # White
 
 
 ##############################################################################
-# Detect required version of python
+# Clean pyc files in specified directory
 # Globals:
-#   colors
-#   PYTHON
-# Arguments:
 #   None
+# Arguments:
+#   Optional path to clean
 # Returns:
 #   None
 ###############################################################################
-detect_python () {
-  echo -e "${BIGreen}>>>${RST} Using python \c"
-  command -v python >/dev/null 2>&1 || { echo -e "${BIRed}- NOT FOUND${RST} ${BIYellow}You need Python 3.9 installed to continue.${RST}"; return 1; }
-  local version_command="import sys;print('{0}.{1}'.format(sys.version_info[0], sys.version_info[1]))"
-  local python_version="$(python <<< ${version_command})"
-  oIFS="$IFS"
-  IFS=.
-  set -- $python_version
-  IFS="$oIFS"
-  if [ "$1" -ge "3" ] && [ "$2" -ge "9" ] ; then
-    if [ "$2" -gt "9" ] ; then
-      echo -e "${BIWhite}[${RST} ${BIRed}$1.$2 ${BIWhite}]${RST} - ${BIRed}FAILED${RST} ${BIYellow}Version is new and unsupported, use${RST} ${BIPurple}3.9.x${RST}"; return 1;
-    else
-      echo -e "${BIWhite}[${RST} ${BIGreen}$1.$2${RST} ${BIWhite}]${RST}"
-    fi
-  else
-    command -v python >/dev/null 2>&1 || { echo -e "${BIRed}$1.$2$ - ${BIRed}FAILED${RST} ${BIYellow}Version is old and unsupported${RST}"; return 1; }
-  fi
+clean_pyc () {
+  local path
+  path=$repo_root
+  echo -e "${BIGreen}>>>${RST} Cleaning pyc at [ ${BIWhite}$path${RST} ] ... \c"
+  find "$path" -path ./build -o -regex '^.*\(__pycache__\|\.py[co]\)$' -delete
+
+  echo -e "${BIGreen}DONE${RST}"
 }
 
-install_poetry () {
-  echo -e "${BIGreen}>>>${RST} Installing Poetry ..."
-  export POETRY_HOME="$repo_root/.poetry"
+install_uv () {
+  echo -e "${BIGreen}>>>${RST} Installing uv ..."
   command -v curl >/dev/null 2>&1 || { echo -e "${BIRed}!!!${RST}${BIYellow} Missing ${RST}${BIBlue}curl${BIYellow} command.${RST}"; return 1; }
-  curl -sSL https://install.python-poetry.org/ | python -
+  curl -LsSf https://astral.sh/uv/install.sh | sh
 }
 
 ##############################################################################
@@ -87,8 +76,6 @@ realpath () {
 # Create Virtual Environment
 # Globals:
 #   repo_root
-#   POETRY_HOME
-#   poetry_verbosity
 # Arguments:
 #   Path to resolve
 # Returns:
@@ -98,21 +85,12 @@ create_env () {
   # Directories
   pushd "$repo_root" > /dev/null || return > /dev/null
 
-  echo -e "${BIGreen}>>>${RST} Reading Poetry ... \c"
-  if [ -f "$POETRY_HOME/bin/poetry" ]; then
-    echo -e "${BIGreen}OK${RST}"
-  else
-    echo -e "${BIYellow}NOT FOUND${RST}"
-    install_poetry || { echo -e "${BIRed}!!!${RST} Poetry installation failed"; return 1; }
-  fi
 
-  if [ -f "$repo_root/poetry.lock" ]; then
-    echo -e "${BIGreen}>>>${RST} Updating dependencies ..."
-  else
-    echo -e "${BIGreen}>>>${RST} Installing dependencies ..."
+  if ! command -v uv >/dev/null 2>&1; then
+    install_uv || { echo -e "${BIRed}!!!${RST} uv installation failed"; return 1; }
+    export PATH="$HOME/.local/bin:$PATH"
   fi
-
-  "$POETRY_HOME/bin/poetry" install --no-root $poetry_verbosity || { echo -e "${BIRed}!!!${RST} Poetry environment installation failed"; return 1; }
+  uv venv && uv sync || { echo -e "${BIRed}!!!${RST} Venv installation failed"; return 1; }
   if [ $? -ne 0 ] ; then
     echo -e "${BIRed}!!!${RST} Virtual environment creation failed."
     return 1
@@ -121,11 +99,9 @@ create_env () {
   echo -e "${BIGreen}>>>${RST} Cleaning cache files ..."
   clean_pyc
 
-  "$POETRY_HOME/bin/poetry" run python -m pip install --disable-pip-version-check --force-reinstall pip
-
   if [ -d "$repo_root/.git" ]; then
     echo -e "${BIGreen}>>>${RST} Installing pre-commit hooks ..."
-    "$POETRY_HOME/bin/poetry" run pre-commit install
+    uv run pre-commit install
   fi
 }
 
@@ -153,37 +129,46 @@ default_help() {
   echo -e "Usage: ${BWhite}./manage.sh${RST} ${BICyan}[command]${RST}"
   echo ""
   echo -e "${BWhite}Commands:${RST}"
-  echo -e "  ${BWhite}create-env${RST}      ${BCyan}Install Poetry and update venv by lock file${RST}"
+  echo -e "  ${BWhite}create-env${RST}      ${BCyan}Install uv and update venv by lock file${RST}"
   echo -e "  ${BWhite}ruff-check${RST}      ${BCyan}Run Ruff check for the repository${RST}"
   echo -e "  ${BWhite}ruff-fix${RST}        ${BCyan}Run Ruff fix for the repository${RST}"
   echo -e "  ${BWhite}codespell${RST}       ${BCyan}Run codespell check for the repository${RST}"
+  echo -e "  ${BWhite}build-docs${RST}      ${BCyan}Build documentation using mkdocs${RST}"
+  echo -e "  ${BWhite}serve-docs${RST}      ${BCyan}Serve documentation using mkdocs${RST}"
+  echo -e "  ${BWhite}clear-cache${RST}     ${BCyan}Clear Python cache files${RST}"
+  echo -e "  ${BWhite}run${RST}             ${BCyan}Run a command in the virtual environment${RST}"
+  echo -e "  ${BWhite}run-tests${RST}       ${BCyan}Run tests in the virtual environment${RST}"
   echo ""
 }
 
 run_ruff () {
   echo -e "${BIGreen}>>>${RST} Running Ruff check ..."
-  "$POETRY_HOME/bin/poetry" run ruff check
+  uv run ruff check
 }
 
 run_ruff_check () {
   echo -e "${BIGreen}>>>${RST} Running Ruff fix ..."
-  "$POETRY_HOME/bin/poetry" run ruff check --fix
+  uv run ruff check --fix
 }
 
 run_codespell () {
   echo -e "${BIGreen}>>>${RST} Running codespell check ..."
-  "$POETRY_HOME/bin/poetry" run codespell
+  uv run codespell
+}
+
+build_docs () {
+  echo -e "${BIGreen}>>>${RST} Building documentation ..."
+  uv run --group docs mkdocs build
+}
+
+serve_docs () {
+  echo -e "${BIGreen}>>>${RST} Serving documentation ..."
+  uv run mkdocs serve
 }
 
 main () {
-  detect_python || return 1
-
   # Directories
   repo_root=$(realpath $(dirname $(dirname "${BASH_SOURCE[0]}")))
-
-  if [[ -z $POETRY_HOME ]]; then
-    export POETRY_HOME="$repo_root/.poetry"
-  fi
 
   pushd "$repo_root" > /dev/null || return > /dev/null
 
@@ -205,6 +190,29 @@ main () {
       ;;
     "codespell")
       run_codespell || return_code=$?
+      exit $return_code
+      ;;
+    "run")
+      shift
+      uv run "$@" || return_code=$?
+      exit $return_code
+      ;;
+    "runtests")
+      shift
+      uv run --group tests pytest "$@" || return_code=$?
+      exit $return_code
+      ;;
+    "builddocs")
+      build_docs || return_code=$?
+      exit $return_code
+      ;;
+
+    "servedocs")
+      serve_docs || return_code=$?
+      exit $return_code
+      ;;
+    "clearcache")
+      clean_pyc || return_code=$?
       exit $return_code
       ;;
   esac

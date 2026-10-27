@@ -3,6 +3,7 @@
 These test need to be run in 3DEqualizer.
 """
 
+import dataclasses
 import json
 import re
 import unittest
@@ -86,7 +87,7 @@ def add_container(container: Container) -> None:
             containers.remove(_container)
             break
 
-    containers.append(container)
+    containers.append(dataclasses.asdict(container))
 
     context_data["containers"] = containers
     update_context_data(context_data, {})
