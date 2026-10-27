@@ -224,7 +224,7 @@ function Invoke-Codespell {
 }
 
 function Start-Tests {
-    $RunArgs = @( "run", "pytest", "$($RepoRoot)/tests")
+    $RunArgs = @( "run", "--group", "tests", "pytest")
 
     & uv $RunArgs @arguments
 }
