@@ -7,14 +7,14 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from ayon_core.addon import AYONAddon, IHostAddon
+from ayon_core.addon import AYONAddon, IHostAddon, IPluginPaths
 
 from .version import __version__
 
 EQUALIZER_HOST_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-class EqualizerAddon(AYONAddon, IHostAddon):
+class EqualizerAddon(AYONAddon, IHostAddon, IPluginPaths):
     """3DEqualizer Addon for AYON."""
 
     name = "equalizer"
@@ -26,6 +26,25 @@ class EqualizerAddon(AYONAddon, IHostAddon):
         """Initialize Equalizer Addon."""
         self.heartbeat = settings["equalizer"]["heartbeat_interval"]
         self.enabled = True
+
+    def get_plugin_paths(self):
+        return {}
+
+    def get_create_plugin_paths(self, host_name):
+        if host_name != self.host_name:
+            return []
+        plugins_dir = os.path.join(EQUALIZER_HOST_DIR, "plugins")
+        return [os.path.join(plugins_dir, "create")]
+
+    def get_publish_plugin_paths(self, host_name):
+        if host_name != self.host_name:
+            return []
+        plugins_dir = os.path.join(EQUALIZER_HOST_DIR, "plugins")
+        return [os.path.join(plugins_dir, "publish")]
+
+    def get_load_plugin_paths(self, host_name):
+        loaders_dir = os.path.join(EQUALIZER_HOST_DIR, "plugins", "load")
+        return [os.path.join(loaders_dir, host_name)]
 
     def add_implementation_envs(self, env: dict, _app: Any) -> None:  # noqa: ANN401
         """Add 3DEqualizer specific environment variables.

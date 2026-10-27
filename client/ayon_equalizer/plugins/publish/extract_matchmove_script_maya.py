@@ -168,7 +168,7 @@ class ExtractMatchmoveScriptMaya(publish.Extractor,
                 if npoly_warning:
                     self.log.warning("npoly warning: %s", npoly_warning)
                 representation = {
-                    "name": "py",
+                    "name": "py_maya",
                     "ext": "py",
                     "files": f"{file_path.name}.py",
                     "stagingDir": staging_dir,
